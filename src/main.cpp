@@ -4,21 +4,18 @@
 
 #include <DisplayDriver.h>
 
+#include <Frame.h>
+
 
 
 int main() {
-	DisplayDriver* display = new DisplayDriver("Window", 640, 480);
-	bool success = display->Init();
-
-	if (success && display->IsActive()) {
-		LOG_DEBUG("Successful init");
-	}
-	else {
-		LOG_DEBUG("Init failed");
+	Renderer::DisplayDriver* display = new Renderer::DisplayDriver("Window", 640, 480);
+	if (!display->Init()) {
+		exit(1);
 	}
 
 	while (display->IsActive()) {
-		display->PollEvent();
+		display->PollEvents();
 		display->SetupFrameTest();
 		display->RenderFrame();
 		SDL_Delay(1/60);

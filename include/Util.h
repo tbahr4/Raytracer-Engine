@@ -1,6 +1,5 @@
 //!
 //! Util.h
-//! 
 //! General utility functions
 //! 
 #pragma once
