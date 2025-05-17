@@ -7,6 +7,7 @@
 #include <queue>
 #include <Frame.h>
 #include <DisplayDriver.h>
+#include <CollisionMgr.h>
 
 
 namespace Renderer {
