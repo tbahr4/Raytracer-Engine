@@ -66,35 +66,6 @@ namespace Renderer {
 		return this->isInitialized;
 	}
 
-	//! SetupFrameTest
-	//! Debug test command
-	//! 
-	void DisplayDriver::SetupFrameTest() {
-		if (!IsActive()) return;
-
-		SDL_LockTexture(texture, NULL, &pixels, &pitch);
-		memset(pixels, 0, pitch * this->windowHeight);
-
-		Uint32* pixels32 = (Uint32*)pixels;
-		Uint32 white = 0xFF0000FF; // RGBA
-		Uint32 white2 = 0x0000FFFF; // RGBA
-
-
-		int square_size = 100;
-		int start_x = (this->windowWidth - square_size) / 2;
-		int start_y = (this->windowHeight - square_size) / 2;
-
-		for (int y = 0; y < square_size; ++y) {
-			for (int x = 0; x < square_size; ++x) {
-				int px = start_x + x;
-				int py = start_y + y;
-				pixels32[py * (pitch / 4) + px] = white;
-			}
-		}
-
-		SDL_UnlockTexture(texture);
-	}
-
 	//! PollEvents
 	//! Processes input events from the user
 	//! 
@@ -113,11 +84,17 @@ namespace Renderer {
 	}
 
 	//! RenderFrame
-	//! Renders the active frame buffer to the window
+	//! Renders the provided frame buffer to the window
 	//! 
-	void DisplayDriver::RenderFrame() {
+	void DisplayDriver::RenderFrame(const Frame& frame) {
 		if (!IsActive()) return;
 
+		//! Set texture
+		SDL_LockTexture(texture, NULL, &pixels, &pitch);
+		memcpy(pixels, frame.GetBuffer(), pitch * this->windowHeight);
+		SDL_UnlockTexture(texture);
+
+		//! Render texture
 		SDL_RenderClear(renderer);
 		SDL_RenderTexture(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);

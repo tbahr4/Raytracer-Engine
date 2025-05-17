@@ -44,9 +44,12 @@ namespace Renderer {
 	void Renderer::SetupFrameTest() {
 		if (!display.IsActive()) return;
 
+		for (int x=0;x<100;x++)
+			for (int y=0;y<100;y++)
+				this->window.SetPixel(x+280,y+200, 0xFF0000FF);
+
 		display.PollEvents();
-		display.SetupFrameTest();
-		display.RenderFrame();
+		display.RenderFrame(this->window);
 		SDL_Delay(1 / 60);
 	}
 

@@ -43,6 +43,13 @@ namespace Renderer {
 		return this->height;
 	}
 
+	//! GetBuffer
+	//! Returns the raw frame buffer data
+	//! 
+	const uint32_t* Frame::GetBuffer() const {
+		return this->pixels;
+	}
+
 	//! SetPixel
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint32_t color) {

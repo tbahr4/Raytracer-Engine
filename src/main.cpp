@@ -16,7 +16,6 @@ int main() {
 		renderer->SetupFrameTest();
 	}
 
-
 	delete renderer;
 }
 

@@ -6,6 +6,7 @@
 
 #include <SDL3/SDL.h>
 #include <Util.h>
+#include <Frame.h>
 
 
 
@@ -41,9 +42,8 @@ namespace Renderer {
 		bool IsActive() const;
 
 		//! Interface functions
-		void SetupFrameTest();
 		void PollEvents();
-		void RenderFrame();
+		void RenderFrame(const Frame& frame);
 
 	};
 
