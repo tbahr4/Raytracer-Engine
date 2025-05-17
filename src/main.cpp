@@ -2,28 +2,22 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include <DisplayDriver.h>
+#include <Renderer.h>
 
-#include <Frame.h>
 
 
 
 int main() {
-	Renderer::DisplayDriver* display = new Renderer::DisplayDriver("Window", 640, 480);
-	if (!display->Init()) {
-		exit(1);
-	}
+	Renderer::Renderer* renderer = new Renderer::Renderer("Window", 640, 480);
+	renderer->Init();
 
-	while (display->IsActive()) {
-		display->PollEvents();
-		display->SetupFrameTest();
-		display->RenderFrame();
-		SDL_Delay(1/60);
+
+	while (renderer->IsActive()) {
+		renderer->SetupFrameTest();
 	}
 
 
-
-	delete display;
+	delete renderer;
 }
 
 
