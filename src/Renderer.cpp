@@ -2,8 +2,7 @@
 //! Renderer.cpp
 //! Central component for rendering logic
 //! 
-#include <Renderer.h>
-
+#include "Renderer.h"
 
 
 namespace Renderer {
@@ -51,6 +50,16 @@ namespace Renderer {
 		display.PollEvents();
 		display.RenderFrame(this->window);
 		SDL_Delay(1 / 60);
+	}
+
+	//! RenderFrameTest
+	//! Debug test command
+	//! 
+	void Renderer::RenderFrameTest(const Player::Player& player) {
+		//! Determine rays from camera
+		player
+
+		RayMgr::GetFirstCollision()
 	}
 
 }; // namespace Renderer

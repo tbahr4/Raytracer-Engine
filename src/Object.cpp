@@ -2,9 +2,7 @@
 //! Object.cpp
 //! An instantiated, renderable world object
 //! 
-#pragma once
-
-#include <Object.h>
+#include "Object.h"
 
 
 

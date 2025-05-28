@@ -6,9 +6,9 @@
 #include <SDL3/SDL.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <Renderer.h>
-#include <World.h>
-#include <Object.h>
+#include "Renderer.h"
+#include "World.h"
+#include "Object.h"
 
 
 int main() {

@@ -5,9 +5,11 @@
 #pragma once
 
 #include <queue>
-#include <Frame.h>
-#include <DisplayDriver.h>
-#include <CollisionMgr.h>
+#include "Frame.h"
+#include "DisplayDriver.h"
+#include "RayMgr.h"
+#include "Player.h"
+
 
 
 namespace Renderer {
@@ -33,6 +35,7 @@ namespace Renderer {
 
 		//! Interface functions
 		void SetupFrameTest();
+		void RenderFrameTest(const Player::Player& player);
 	};
 
 }; // namespace Renderer

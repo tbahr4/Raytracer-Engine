@@ -5,7 +5,7 @@
 #pragma once
 
 #include <vector>
-#include <Object.h>
+#include "Object.h"
 
 
 
@@ -18,7 +18,7 @@ namespace World {
 	public:
 		int GetObjectCount() const;
 		Object* GetObject(int index);
-		void AddObject(Object& obj)
+		void AddObject(Object& obj);
 
 	};
 
