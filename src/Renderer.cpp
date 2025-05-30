@@ -68,13 +68,14 @@ namespace Renderer {
 		//double fovRad = fov * Util::PI / 180;
 
 
-		/* ------------------------------------------------------------
-		* 
-		* ------------------------------------------------------------- */
-		
+
+		/* ----------------------------------------------------------------
+		 * Get camera FRU vector information
+		 * ---------------------------------------------------------------- */
+
 		// Forward vector
 		Util::Vector3<double> camForward = camera->GetForwardVector();
-		double roll = rotation.roll;
+		double roll = rotation.roll * Util::PI / 180;
 
 		// World reference vector for RD vectors
 		Util::Vector3<double> worldRefVec = Util::Vector3<double>::Up();
@@ -94,6 +95,18 @@ namespace Renderer {
 		Util::Vector3<double> camUp = camUpOrth * std::cos(roll) -
 									  camRightOrth * std::sin(roll);
 
+		/* ----------------------------------------------------------------
+		 * Setup ray information
+		 * ---------------------------------------------------------------- */
+		std::vector<RayMgr::Ray> rays(123);
+
+		// TODO: rotate by theta_x and theta_y
+		// for theta_y = 0...
+		// rotated_dir = cos(theta_x) dot camForward  +  sin(theta_x) dot camRight
+		// - This gives the rotation from forward to right by theta_x degrees
+		// - Will need to do generate all theta_y, then process all theta_x per theta_y, 
+
+		// NOTE: Each ray should not be linearly spaced
 
 
 		//Util::Vector3<double> camPlaneNormal = position
