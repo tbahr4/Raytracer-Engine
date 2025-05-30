@@ -18,7 +18,7 @@ int main() {
 
 	//! Add object
 	World::Object obj(0, Util::Transform(Util::Vector3<double>(10, 0, 0),
-						 Util::Vector3<double>(0, 0, 0),
+						 Util::Rotation(0, 0, 0),
 						 Util::Vector3<double>(1, 1, 1)), World::ShapeType::CUBE);
 	world->AddObject(obj);
 

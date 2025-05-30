@@ -3,6 +3,7 @@
 //! Central component for rendering logic
 //! 
 #include "Renderer.h"
+#include "Util.h"
 
 
 namespace Renderer {
@@ -55,11 +56,49 @@ namespace Renderer {
 	//! RenderFrameTest
 	//! Debug test command
 	//! 
-	void Renderer::RenderFrameTest(const Player::Player& player) {
-		//! Determine rays from camera
-		player
+	void Renderer::RenderFrameTest(Player::Player* player, int screenWidth, int screenHeight) {
+		//! Retrieve camera information
+		Player::Camera* camera = player->GetCamera();
+		const Util::Vector3<double>& position = camera->GetPosition();
+		const Util::Rotation& rotation = camera->GetRotation();
+		double fov = camera->GetFOV();
 
-		RayMgr::GetFirstCollision()
+		//! Get screen space information
+		//double aspect_ratio = screenWidth / screenHeight;
+		//double fovRad = fov * Util::PI / 180;
+
+
+		/* ------------------------------------------------------------
+		* 
+		* ------------------------------------------------------------- */
+		
+		// Forward vector
+		Util::Vector3<double> camForward = camera->GetForwardVector();
+		double roll = rotation.roll;
+
+		// World reference vector for RD vectors
+		Util::Vector3<double> worldRefVec = Util::Vector3<double>::Up();
+		if (std::abs(camForward.Dot(worldRefVec))) {
+			worldRefVec = Util::Vector3<double>::Forward();
+		}
+		
+		// Compute world axis orthogonal vectors
+		Util::Vector3<double> camRightOrth = camForward.Cross(worldRefVec);
+		Util::Vector3<double> camUpOrth = camRightOrth.Cross(camForward);
+	
+
+		// Roll camera RU vectors
+		Util::Vector3<double> camRight = camRightOrth * std::cos(roll) +
+										 camUpOrth * std::sin(roll);
+
+		Util::Vector3<double> camUp = camUpOrth * std::cos(roll) -
+									  camRightOrth * std::sin(roll);
+
+
+
+		//Util::Vector3<double> camPlaneNormal = position
+
+		//RayMgr::GetFirstCollision()
 	}
 
 }; // namespace Renderer

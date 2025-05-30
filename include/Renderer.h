@@ -35,7 +35,7 @@ namespace Renderer {
 
 		//! Interface functions
 		void SetupFrameTest();
-		void RenderFrameTest(const Player::Player& player);
+		void RenderFrameTest(Player::Player* player, int screenWidth, int screenHeight);
 	};
 
 }; // namespace Renderer
