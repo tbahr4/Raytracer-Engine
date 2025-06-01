@@ -61,7 +61,7 @@ namespace Renderer {
 		Player::Camera* camera = player->GetCamera();
 		const Util::Vector3<double>& position = camera->GetPosition();
 		const Util::Rotation& rotation = camera->GetRotation();
-		double fov = camera->GetFOV();
+		double fov_rad = camera->GetFOV() * 180 / Util::PI;
 
 		//! Get screen space information
 		//double aspect_ratio = screenWidth / screenHeight;
@@ -96,22 +96,35 @@ namespace Renderer {
 									  camRightOrth * std::sin(roll);
 
 		/* ----------------------------------------------------------------
-		 * Setup ray information
+		 * Generate rays
 		 * ---------------------------------------------------------------- */
-		std::vector<RayMgr::Ray> rays(123);
+		std::vector<RayMgr::Ray> rays(screenWidth * screenHeight);
 
-		// TODO: rotate by theta_x and theta_y
-		// for theta_y = 0...
-		// rotated_dir = cos(theta_x) dot camForward  +  sin(theta_x) dot camRight
-		// - This gives the rotation from forward to right by theta_x degrees
-		// - Will need to do generate all theta_y, then process all theta_x per theta_y, 
+		double halfWidth = tan(fov_rad / 2);
+		double aspectRatio = screenWidth / screenHeight;
+		double halfHeight = halfWidth / aspectRatio;
 
-		// NOTE: Each ray should not be linearly spaced
+		int rayIdx = 0;
+		for (int py = 0; py < screenHeight; py++) {
+			for (int px = 0; px < screenWidth; px++) {
+				//! Normalize pixels to UV [-1,1]
+				double u = ((px + 0.5) / screenWidth) * 2 - 1;
+				double v = ((py + 0.5) / screenHeight) * 2 - 1;
 
+				//! Scale UV by half the screen size
+				double x = u * halfWidth;
+				double y = v * halfHeight;
 
-		//Util::Vector3<double> camPlaneNormal = position
+				//! Construct the ray
+				rays[rayIdx].origin = position;
+				rays[rayIdx].vector = (x * camRight + y * camUp + camForward).Normalize();
+				rayIdx++;
+			}
+		}
 
-		//RayMgr::GetFirstCollision()
+		/* ----------------------------------------------------------------
+		 * Perform collision logic
+		 * ---------------------------------------------------------------- */
 	}
 
 }; // namespace Renderer

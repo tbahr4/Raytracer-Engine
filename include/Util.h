@@ -32,18 +32,16 @@ namespace Util {
 		Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
 		//! Utility functions
-		void Normalize() {
+		Vector3<T> Normalize() {
 			double magnitude = std::sqrt(std::pow(x,2) + std::pow(y,2) + std::pow(z,2));
-			x = x / magnitude;
-			y = y / magnitude;
-			z = z / magnitude;
+			return Vector3(x / magnitude, y / magnitude, z / magnitude);
 		}
 
-		T Dot(const Vector3& other) {
+		T Dot(const Vector3& other) const {
 			return x * other.x + y * other.y + z * other.z;
 		}
 
-		Vector3<T> Cross(const Vector3& other) {
+		Vector3<T> Cross(const Vector3& other) const {
 			return Vector3(
 				y * other.z - z * other.y,
 				z * other.x - x * other.z,
@@ -60,13 +58,13 @@ namespace Util {
 		Vector3 operator*(T scalar) const {
 			return Vector3(x * scalar, y * scalar, z * scalar);
 		}
-		friend Vector3 operator*(double scalar, const Vector3& vec) {
+		friend Vector3 operator*(double scalar, const Vector3& vec) const {
 			return vec * scalar;
 		}
-		Vector3 operator+(const Vector3& other) {
+		Vector3 operator+(const Vector3& other) const {
 			return Vector3(x + other.x, y + other.y, z + other.z);
 		}
-		Vector3 operator-(const Vector3& other) {
+		Vector3 operator-(const Vector3& other) const {
 			return Vector3(x - other.x, y - other.y, z - other.z);
 		}
 	};
