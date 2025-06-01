@@ -3,7 +3,7 @@
 //! Central component for rendering logic
 //! 
 #include "Renderer.h"
-#include "Util.h"
+
 
 
 namespace Renderer {
@@ -117,7 +117,7 @@ namespace Renderer {
 
 				//! Construct the ray
 				rays[rayIdx].origin = position;
-				rays[rayIdx].vector = (x * camRight + y * camUp + camForward).Normalize();
+				rays[rayIdx].vector = (x * camRight + y * camUp + camForward).Normalized();
 				rayIdx++;
 			}
 		}
@@ -125,6 +125,25 @@ namespace Renderer {
 		/* ----------------------------------------------------------------
 		 * Perform collision logic
 		 * ---------------------------------------------------------------- */
+		for (int rayI = 0; rayI < rays.size(); rayI++) {
+			
+			//! Retrieve ray context
+			const RayMgr::Ray& ray = rays[rayI];
+			int px = rayI % screenWidth;
+			int py = rayI % screenWidth;
+
+			//! Find first collision
+			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(ray, nullptr);
+
+			if (colInfo == nullptr) {
+				this->window.SetPixel(px, py, 0xFF00FFFF);
+				continue;
+			}
+
+			//! Handle collision
+			const double reflectivity = 0.5;
+			//colInfo->object
+		}
 	}
 
 }; // namespace Renderer
