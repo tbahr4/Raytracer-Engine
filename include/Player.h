@@ -19,7 +19,7 @@ namespace Player {
 		Player(Camera* camera);
 
 		//! Accessors
-		Camera* GetCamera() { return camera; }
+		Camera* GetCamera();
 	};
 
 }; // namespace Player

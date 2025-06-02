@@ -8,8 +8,11 @@
 
 namespace Player {
 
-	/*Player(Camera* camera) 
+	Player::Player(Camera* camera)
 		: camera(camera)
-	{}*/
+	{}
+
+	//! Accessors
+	Camera* Player::GetCamera() { return camera; }
 
 }; // namespace Player 

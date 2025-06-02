@@ -61,13 +61,7 @@ namespace Renderer {
 		Player::Camera* camera = player->GetCamera();
 		const Util::Vector3<double>& position = camera->GetPosition();
 		const Util::Rotation& rotation = camera->GetRotation();
-		double fov_rad = camera->GetFOV() * 180 / Util::PI;
-
-		//! Get screen space information
-		//double aspect_ratio = screenWidth / screenHeight;
-		//double fovRad = fov * Util::PI / 180;
-
-
+		double fov_rad = camera->GetFOV() * Util::PI / 180;
 
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
@@ -130,7 +124,7 @@ namespace Renderer {
 			//! Retrieve ray context
 			const RayMgr::Ray& ray = rays[rayI];
 			int px = rayI % screenWidth;
-			int py = rayI % screenWidth;
+			int py = rayI / screenWidth;
 
 			//! Find first collision
 			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(ray, nullptr);
@@ -141,9 +135,22 @@ namespace Renderer {
 			}
 
 			//! Handle collision
-			const double reflectivity = 0.5;
+			// reflectivity + transparency <= 1.0
+			// diffuse + reflectance + transparency = 1.0
+			//const double reflectivity = 0.5;
+			//const double transparency = 0.25;
 			//colInfo->object
+
+			// Just color it to start
+			this->window.SetPixel(px, py, 0xFFFFFFFF);
 		}
+
+		/* ----------------------------------------------------------------
+		 * Display Driver logic
+		 * ---------------------------------------------------------------- */
+		display.PollEvents();
+		display.RenderFrame(this->window);
+		SDL_Delay(1 / 60);
 	}
 
 }; // namespace Renderer
