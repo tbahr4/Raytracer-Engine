@@ -10,9 +10,10 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight) 
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, World::World* world)
 	: window("WindowFrame", windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight)
+	, world(world)
 	{}
 
 	//! Init
@@ -111,7 +112,7 @@ namespace Renderer {
 
 				//! Construct the ray
 				rays[rayIdx].origin = position;
-				rays[rayIdx].vector = (x * camRight + y * camUp + camForward).Normalized();
+				rays[rayIdx].direction = (x * camRight + y * camUp + camForward).Normalized();
 				rayIdx++;
 			}
 		}
@@ -127,10 +128,10 @@ namespace Renderer {
 			int py = rayI / screenWidth;
 
 			//! Find first collision
-			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(ray, nullptr);
+			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(*world, ray, nullptr);
 
 			if (colInfo == nullptr) {
-				this->window.SetPixel(px, py, 0xFF00FFFF);
+				this->window.SetPixel(px, py, ray.direction.y <= 0 ? 0x85B4FFFF : 0x00B318FF);
 				continue;
 			}
 

@@ -16,16 +16,19 @@ namespace Renderer {
 
 		struct Ray {
 			Util::Vector3<double> origin;
-			Util::Vector3<double> vector;
+			Util::Vector3<double> direction;
 		};
 
 		struct CollisionInfo {
 			World::Object* object;
 			Util::Vector3<double> position;
 			Util::Vector3<double> normal;
+			double distance;
+
+			CollisionInfo() : object(nullptr), position(), normal(), distance(0) {}
 		};
 
-		CollisionInfo* GetFirstCollision(const Ray& ray, World::Object* ignoreObj);
+		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj);
 
 		Ray* GetDiffuseRay(Ray* initialRay, CollisionInfo* colInfo);
 		Ray* GetSpecularRay(Ray* initialRay, CollisionInfo* colInfo);

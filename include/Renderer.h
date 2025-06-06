@@ -10,6 +10,7 @@
 #include "RayMgr.h"
 #include "Player.h"
 #include "Util.h"
+#include "World.h"
 
 
 
@@ -20,13 +21,14 @@ namespace Renderer {
 		std::queue<Frame> renderQueue;
 		Frame window;
 		DisplayDriver display;
+		World::World* world;
 
 		//! Internal variables
 		bool isInitialized = false;
 
 	public:
 		//! Constructors
-		Renderer(const char* windowTitle, int windowWidth, int windowHeight);
+		Renderer(const char* windowTitle, int windowWidth, int windowHeight, World::World* world);
 
 		//! Initialization
 		bool Init();

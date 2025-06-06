@@ -22,5 +22,6 @@ namespace World {
 	const Util::Vector3<double>& Object::GetPosition() const { return transform.position; }
 	const Util::Rotation& Object::GetRotation() const { return transform.rotation; }
 	const Util::Vector3<double>& Object::GetScale() const { return transform.scale; }
+	ShapeType Object::GetShapeType() const { return shape; }
 
 }; // namespace World

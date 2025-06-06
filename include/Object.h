@@ -35,6 +35,7 @@ namespace World {
 		const Util::Vector3<double>& GetPosition() const;
 		const Util::Rotation& GetRotation() const;
 		const Util::Vector3<double>& GetScale() const;
+		ShapeType GetShapeType() const;
 
 	};
 
