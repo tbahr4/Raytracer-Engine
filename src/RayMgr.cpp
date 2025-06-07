@@ -15,6 +15,10 @@ namespace Renderer {
 		//! Ignores the given object if specified
 		//! 
 		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj) {
+			// Maintain the shortest distance collision
+			CollisionInfo* collision = nullptr;
+			double minDist = INFINITY;
+
 			//! Perform collision logic for all objects by default
 			int nObjects = world.GetObjectCount();
 			for (int objI = 0; objI < nObjects; objI++) {
@@ -52,13 +56,16 @@ namespace Renderer {
 					if (discriminant >= 0) {
 						double distance = (-b - std::sqrt(discriminant)) / (2 * a);
 
-						if (distance >= 0) {	// Ignore collisions behind ray origin
-							CollisionInfo* collision = new CollisionInfo();
+						if (distance >= 0 && distance < minDist) {	// Ignore collisions behind ray origin
+							minDist = distance;
+							if (collision == nullptr) {
+								collision = new CollisionInfo();
+							}
+
 							collision->distance = distance;
 							collision->object = object;
 							collision->position = ray.origin + ray.direction * distance;
 							collision->normal = (collision->position - sphereCenter).Normalized();
-							return collision;
 						}
 					}
 
@@ -67,7 +74,7 @@ namespace Renderer {
 			}
 
 			//! No collision found
-			return nullptr;
+			return collision;
 		}
 
 		Ray* RayMgr::GetDiffuseRay(Ray* initialRay, CollisionInfo* colInfo) {
