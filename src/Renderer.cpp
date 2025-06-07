@@ -79,7 +79,7 @@ namespace Renderer {
 		}
 		
 		// Compute world axis orthogonal vectors
-		Util::Vector3<double> camRightOrth = camForward.Cross(worldRefVec);
+		Util::Vector3<double> camRightOrth = -1 * camForward.Cross(worldRefVec);
 		Util::Vector3<double> camUpOrth = camRightOrth.Cross(camForward);
 	
 
@@ -131,7 +131,7 @@ namespace Renderer {
 			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(*world, ray, nullptr);
 
 			if (colInfo == nullptr) {
-				this->window.SetPixel(px, py, ray.direction.y <= 0 ? 0x85B4FFFF : 0x00B318FF);
+				this->window.SetPixel(px, py, ray.direction.y <= 0 ? 0x00B318FF : 0x85B4FFFF);
 				continue;
 			}
 
