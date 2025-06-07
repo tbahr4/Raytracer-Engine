@@ -10,10 +10,11 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight) {
+	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world) {
 		this->windowTitle = windowTitle;
 		this->windowWidth = windowWidth;
 		this->windowHeight = windowHeight;
+		this->inputMgr = new InputMgr::InputMgr(player, world);
 	}
 
 	//! Destructor
@@ -23,6 +24,7 @@ namespace Renderer {
 		if (renderer) SDL_DestroyRenderer(renderer);
 		if (window) SDL_DestroyWindow(window);
 		SDL_Quit();
+		delete inputMgr;
 	}
 
 	//! Init
@@ -78,7 +80,8 @@ namespace Renderer {
 				this->isInitialized = false;
 			}
 			else {
-				// Handle events within InputManager
+				// Handle key events within InputManager
+				inputMgr->HandleEvent(event);
 			}
 		}
 	}

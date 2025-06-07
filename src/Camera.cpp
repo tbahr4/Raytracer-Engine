@@ -29,4 +29,9 @@ namespace Player {
 		return forward;
 	}
 
+	//! Accessors/Mutators
+	Util::Vector3<double>& Camera::GetPosition() { return position; }
+	Util::Rotation& Camera::GetRotation() { return rotation; }
+	double Camera::GetFOV() const { return fov; }
+
 }; // namespace Player

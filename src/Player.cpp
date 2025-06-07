@@ -14,5 +14,6 @@ namespace Player {
 
 	//! Accessors
 	Camera* Player::GetCamera() { return camera; }
+	double Player::GetMovementSpeed() const { return movementSpeed; }
 
 }; // namespace Player 

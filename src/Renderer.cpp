@@ -10,9 +10,9 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, World::World* world)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world)
 	: window("WindowFrame", windowWidth, windowHeight)
-	, display(windowTitle, windowWidth, windowHeight)
+	, display(windowTitle, windowWidth, windowHeight, player, world)
 	, world(world)
 	{}
 

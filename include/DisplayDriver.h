@@ -7,6 +7,7 @@
 #include <SDL3/SDL.h>
 #include "Util.h"
 #include "Frame.h"
+#include "InputMgr.h"
 
 
 
@@ -29,10 +30,11 @@ namespace Renderer {
 		bool isInitialized = false;
 		void* pixels;	// Raw pixel buffer
 		int pitch;		// bytes per row of the pixel buffer
+		InputMgr::InputMgr* inputMgr;
 
 	public:
 		//! Constructors
-		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight);
+		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world);
 		~DisplayDriver();
 
 		//! Initialization

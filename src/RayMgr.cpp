@@ -10,6 +10,10 @@ namespace Renderer {
 
 	namespace RayMgr {
 
+		//! GetFirstCollision
+		//! Returns the nearest object collision, if any, from the given ray
+		//! Ignores the given object if specified
+		//! 
 		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj) {
 			//! Perform collision logic for all objects by default
 			int nObjects = world.GetObjectCount();

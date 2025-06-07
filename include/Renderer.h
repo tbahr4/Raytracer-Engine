@@ -28,7 +28,7 @@ namespace Renderer {
 
 	public:
 		//! Constructors
-		Renderer(const char* windowTitle, int windowWidth, int windowHeight, World::World* world);
+		Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world);
 
 		//! Initialization
 		bool Init();

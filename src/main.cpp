@@ -10,17 +10,17 @@
 #include "World.h"
 #include "Object.h"
 
-constexpr int screenWidth = 640*2;
-constexpr int screenHeight = 480*2;
+constexpr int screenWidth = 1280;
+constexpr int screenHeight = 960;
 constexpr double fov = 60;
 
 
 int main() {
 	//! Initialize components
 	World::World* world = new World::World();
-	Renderer::Renderer* renderer = new Renderer::Renderer("Window", screenWidth, screenHeight, world);
 	Player::Camera* camera = new Player::Camera(Util::Vector3<double>(0, 0, 0), Util::Rotation(0, 0, 0), fov);
 	Player::Player* player = new Player::Player(camera);
+	Renderer::Renderer* renderer = new Renderer::Renderer("Window", screenWidth, screenHeight, player, world);
 
 	//! Add object
 	World::Object obj(0, Util::Transform(Util::Vector3<double>(0, 0, 5),

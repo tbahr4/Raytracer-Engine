@@ -12,6 +12,10 @@ namespace Player {
 
 	class Player {
 	private:
+		//! Properties
+		const double movementSpeed = 1;
+
+		//! Component references
 		Camera* camera;
 
 	public:
@@ -20,6 +24,7 @@ namespace Player {
 
 		//! Accessors
 		Camera* GetCamera();
+		double GetMovementSpeed() const;
 	};
 
 }; // namespace Player
