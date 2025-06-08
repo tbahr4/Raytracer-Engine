@@ -34,7 +34,7 @@ namespace Renderer {
 
 	public:
 		//! Constructors
-		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world);
+		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr);
 		~DisplayDriver();
 
 		//! Initialization

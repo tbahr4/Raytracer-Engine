@@ -10,10 +10,11 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr)
 	: window("WindowFrame", windowWidth, windowHeight)
-	, display(windowTitle, windowWidth, windowHeight, player, world)
+	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
+	, inputMgr(inputMgr)
 	{}
 
 	//! Init
@@ -146,12 +147,14 @@ namespace Renderer {
 			const Util::Vector3<double>& color = colInfo->object->GetMaterial().color;
 			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
 			this->window.SetPixel(px, py, colorAdj);
+			delete colInfo;
 		}
 
 		/* ----------------------------------------------------------------
 		 * Display Driver logic
 		 * ---------------------------------------------------------------- */
 		display.PollEvents();
+		inputMgr->ProcessActivityState();	// Process valid activities
 		display.RenderFrame(this->window);
 		SDL_Delay(1 / 60);
 	}

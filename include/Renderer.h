@@ -22,13 +22,14 @@ namespace Renderer {
 		Frame window;
 		DisplayDriver display;
 		World::World* world;
+		InputMgr::InputMgr* inputMgr;
 
 		//! Internal variables
 		bool isInitialized = false;
 
 	public:
 		//! Constructors
-		Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world);
+		Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr);
 
 		//! Initialization
 		bool Init();

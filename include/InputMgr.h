@@ -6,6 +6,7 @@
 
 #include <SDL3/SDL.h>
 #include <unordered_map>
+#include <unordered_set>
 #include "Util.h"
 #include "Player.h"
 #include "World.h"
@@ -40,10 +41,13 @@ namespace InputMgr {
 		Player::Player* player;
 		World::World* world;
 
+		std::unordered_set<INPUT_ACTION> activeActions;	// Active keypresses/actions
+
 	public:
 		InputMgr(Player::Player* player, World::World* world);
 
 		void HandleEvent(const SDL_Event& event);
+		void ProcessActivityState();
 	};
 
 }; // namespace InputMgr

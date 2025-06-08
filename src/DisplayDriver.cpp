@@ -10,12 +10,12 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world) {
-		this->windowTitle = windowTitle;
-		this->windowWidth = windowWidth;
-		this->windowHeight = windowHeight;
-		this->inputMgr = new InputMgr::InputMgr(player, world);
-	}
+	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr)
+		: windowTitle(windowTitle)
+		, windowWidth(windowWidth)
+		, windowHeight(windowHeight)
+		, inputMgr(inputMgr)
+	{}
 
 	//! Destructor
 	//!

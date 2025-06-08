@@ -17,53 +17,69 @@ namespace InputMgr {
 
 
 	//! HandleEvent
-	//! Handles the provided SDL event
+	//! Handles the provided SDL event and updates relevant activity states
 	//! 
 	void InputMgr::HandleEvent(const SDL_Event& event) {
-		// TODO
-		if (event.type != SDL_EVENT_KEY_DOWN) {
-			return;
-		}
-
-		//! Get action type
-		auto iter = actionMappings.find(event.key.key);
-		if (iter == actionMappings.end()) {
+		//! Find action mapping
+		auto iterAction = actionMappings.find(event.key.key);
+		if (iterAction == actionMappings.end()) {
 			//! Action does not exist
 			return;
 		}
+		InputMgr::INPUT_ACTION action = iterAction->second;
 
-		const InputMgr::INPUT_ACTION& action = iter->second;
-
-		//! Handle action
-		switch (action) {
-		case InputMgr::INPUT_ACTION::MOVE_FORWARD:
-			player->GetCamera()->GetPosition().z += player->GetMovementSpeed();
+		//! Set key activity
+		switch (event.type) {
+		case SDL_EVENT_KEY_DOWN:
+			activeActions.insert(action);
 			break;
 
-		case InputMgr::INPUT_ACTION::MOVE_BACKWARD:
-			player->GetCamera()->GetPosition().z -= player->GetMovementSpeed();
-			break;
-
-		case InputMgr::INPUT_ACTION::MOVE_RIGHT:
-			player->GetCamera()->GetPosition().x += player->GetMovementSpeed();
-			break;
-
-		case InputMgr::INPUT_ACTION::MOVE_LEFT:
-			player->GetCamera()->GetPosition().x -= player->GetMovementSpeed();
-			break;
-
-		case InputMgr::INPUT_ACTION::MOVE_UP:
-			player->GetCamera()->GetPosition().y += player->GetMovementSpeed();
-			break;
-
-		case InputMgr::INPUT_ACTION::MOVE_DOWN:
-			player->GetCamera()->GetPosition().y -= player->GetMovementSpeed();
+		case SDL_EVENT_KEY_UP:
+			activeActions.erase(action);
 			break;
 
 		default:
-			LOG_ERROR("InputMgr: Unhandled action found in mapped action list");
 			break;
 		}
+	}
+
+	//! ProcessActivityState
+	//! Processes all current activity states
+	//! 
+	void InputMgr::ProcessActivityState() {
+		//! Process each action
+		for (InputMgr::INPUT_ACTION action : activeActions) {
+			//! Handle action
+			switch (action) {
+			case InputMgr::INPUT_ACTION::MOVE_FORWARD:
+				player->GetCamera()->GetPosition().z += player->GetMovementSpeed();
+				break;
+
+			case InputMgr::INPUT_ACTION::MOVE_BACKWARD:
+				player->GetCamera()->GetPosition().z -= player->GetMovementSpeed();
+				break;
+
+			case InputMgr::INPUT_ACTION::MOVE_RIGHT:
+				player->GetCamera()->GetPosition().x += player->GetMovementSpeed();
+				break;
+
+			case InputMgr::INPUT_ACTION::MOVE_LEFT:
+				player->GetCamera()->GetPosition().x -= player->GetMovementSpeed();
+				break;
+
+			case InputMgr::INPUT_ACTION::MOVE_UP:
+				player->GetCamera()->GetPosition().y += player->GetMovementSpeed();
+				break;
+
+			case InputMgr::INPUT_ACTION::MOVE_DOWN:
+				player->GetCamera()->GetPosition().y -= player->GetMovementSpeed();
+				break;
+
+			default:
+				LOG_ERROR("InputMgr: Unhandled action found in mapped action list");
+				break;
+			}
+		}		
 	}
 
 }; // namespace InputMgr

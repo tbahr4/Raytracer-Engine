@@ -20,7 +20,8 @@ int main() {
 	World::World* world = new World::World();
 	Player::Camera* camera = new Player::Camera(Util::Vector3<double>(0, 0, 0), Util::Rotation(0, 0, 0), fov);
 	Player::Player* player = new Player::Player(camera);
-	Renderer::Renderer* renderer = new Renderer::Renderer("Window", screenWidth, screenHeight, player, world);
+	InputMgr::InputMgr* inputMgr = new InputMgr::InputMgr(player, world);
+	Renderer::Renderer* renderer = new Renderer::Renderer("Window", screenWidth, screenHeight, player, world, inputMgr);
 
 	//! Add object
 	World::Object obj(MaterialMgr::MATERIAL_ID::TEST_MAT,
