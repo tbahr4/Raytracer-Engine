@@ -132,22 +132,46 @@ namespace Renderer {
 			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(*world, ray, nullptr);
 
 			if (colInfo == nullptr) {
-				this->window.SetPixel(px, py, ray.direction.y <= 0 ? 0x00B318FF : 0x85B4FFFF);
+				this->window.SetPixel(px, py, 0x333333FF);
 				continue;
 			}
 
 			//! Handle collision
-			// reflectivity + transparency <= 1.0
 			// diffuse + reflectance + transparency = 1.0
-			//const double reflectivity = 0.5;
-			//const double transparency = 0.25;
-			//colInfo->object
+			double reflectivity = colInfo->object->GetMaterial().reflectivity;
+			double transparency = colInfo->object->GetMaterial().transparency;
+			double diffuse = 1 - reflectivity - transparency;
 
-			// Just color the material to start
-			const Util::Vector3<double>& color = colInfo->object->GetMaterial().color;
-			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
-			this->window.SetPixel(px, py, colorAdj);
+			if (diffuse < 0) {
+				LOG_ERROR("Invalid diffuse/reflectivity/transparency value. Values must add up to 1");
+			}
+
+			/* ----------------------------------------------------------------
+			* Handle diffuse
+			* ---------------------------------------------------------------- */
+			const Util::Vector3<double> lightPos = { 0,5,3 };
+
+			RayMgr::Ray diffuseRay;
+			diffuseRay.origin = colInfo->position;
+			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
+
+			//! Color material if light is reached
+			RayMgr::CollisionInfo* diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay, nullptr); // need to allow self collision
+			if (diffuseCol == nullptr) {	// Bad check, need to check if light is collided with (in case something is behind the light)
+				//! Calculate intensity
+				double intensity = colInfo->normal.Dot(diffuseRay.direction);
+
+				//! Set pixel color
+				const Util::Vector3<double>& color = colInfo->object->GetMaterial().color * intensity;
+				int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
+				this->window.SetPixel(px, py, colorAdj);
+			}
+			else {
+				this->window.SetPixel(px, py, 0x000000FF);
+			}
+			
 			delete colInfo;
+			delete diffuseCol;
 		}
 
 		/* ----------------------------------------------------------------

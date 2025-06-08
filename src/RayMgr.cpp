@@ -56,7 +56,7 @@ namespace Renderer {
 					if (discriminant >= 0) {
 						double distance = (-b - std::sqrt(discriminant)) / (2 * a);
 
-						if (distance >= 0 && distance < minDist) {	// Ignore collisions behind ray origin
+						if (distance >= -1e-9 && distance < minDist) {	// Ignore collisions behind ray origin
 							minDist = distance;
 							if (collision == nullptr) {
 								collision = new CollisionInfo();
