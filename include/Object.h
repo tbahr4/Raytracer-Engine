@@ -5,6 +5,7 @@
 #pragma once
 
 #include "Util.h"
+#include "MaterialMgr.h"
 
 
 
@@ -21,16 +22,17 @@ namespace World {
 
 	class Object {
 	private:
-		int materialID;
+		MaterialMgr::MATERIAL_ID materialID;
+		const MaterialMgr::Material& material;
 		Util::Transform transform;
 		ShapeType shape;
 
 	public:
 		//! Constructors
-		Object(int materialID, Util::Transform& transform, ShapeType shape);
+		Object(MaterialMgr::MATERIAL_ID materialID, Util::Transform& transform, ShapeType shape);
 
 		//! Accessor/Mutator functions
-		//MaterialType GetMaterial() const;
+		const MaterialMgr::Material& GetMaterial() const;
 		const Util::Transform& GetTransform() const;
 		const Util::Vector3<double>& GetPosition() const;
 		const Util::Rotation& GetRotation() const;

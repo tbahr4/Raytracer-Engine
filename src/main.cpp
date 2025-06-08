@@ -23,9 +23,10 @@ int main() {
 	Renderer::Renderer* renderer = new Renderer::Renderer("Window", screenWidth, screenHeight, player, world);
 
 	//! Add object
-	World::Object obj(0, Util::Transform(Util::Vector3<double>(0, 0, 5),
-						 Util::Rotation(0, 0, 0),
-						 Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+	World::Object obj(MaterialMgr::MATERIAL_ID::TEST_MAT,
+					  Util::Transform(Util::Vector3<double>(0, 0, 5),
+					  Util::Rotation(0, 0, 0),
+					  Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 	world->AddObject(obj);
 
 

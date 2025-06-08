@@ -142,8 +142,10 @@ namespace Renderer {
 			//const double transparency = 0.25;
 			//colInfo->object
 
-			// Just color it to start
-			this->window.SetPixel(px, py, 0xFFFFFFFF);
+			// Just color the material to start
+			const Util::Vector3<double>& color = colInfo->object->GetMaterial().color;
+			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
+			this->window.SetPixel(px, py, colorAdj);
 		}
 
 		/* ----------------------------------------------------------------
