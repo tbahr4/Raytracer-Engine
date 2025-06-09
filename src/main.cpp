@@ -43,6 +43,12 @@ int main() {
 			Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 	world->AddObject(obj3);
 
+	World::Object obj4(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
+		Util::Transform(Util::Vector3<double>(0, 0, 8),
+			Util::Rotation(0, 0, 0),
+			Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+	world->AddObject(obj4);
+
 
 	//! Initialization
 	renderer->Init();

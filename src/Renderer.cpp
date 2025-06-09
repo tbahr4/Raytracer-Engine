@@ -129,49 +129,118 @@ namespace Renderer {
 			int py = rayI / screenWidth;
 
 			//! Find first collision
-			RayMgr::CollisionInfo* colInfo = RayMgr::GetFirstCollision(*world, ray, nullptr);
+			RayMgr::CollisionInfo* firstCollision = RayMgr::GetFirstCollision(*world, ray, nullptr);
 
-			if (colInfo == nullptr) {
+			if (firstCollision == nullptr) {
 				this->window.SetPixel(px, py, 0x333333FF);
 				continue;
 			}
 
 			//! Handle collision
 			// diffuse + reflectance + transparency = 1.0
-			double reflectivity = colInfo->object->GetMaterial().reflectivity;
-			double transparency = colInfo->object->GetMaterial().transparency;
+			double reflectivity = firstCollision->object->GetMaterial().reflectivity;
+			double transparency = firstCollision->object->GetMaterial().transparency;
 			double diffuse = 1 - reflectivity - transparency;
 
 			if (diffuse < 0) {
 				LOG_ERROR("Invalid diffuse/reflectivity/transparency value. Values must add up to 1");
 			}
 
+			Util::Vector3<double> cDiffuse;
+			Util::Vector3<double> cRefl;
+			Util::Vector3<double> cRefr;
+
 			/* ----------------------------------------------------------------
 			* Handle diffuse
 			* ---------------------------------------------------------------- */
 			const Util::Vector3<double> lightPos = { 0,5,3 };
 
-			RayMgr::Ray diffuseRay;
-			diffuseRay.origin = colInfo->position;
-			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
+			if (diffuse > 0) {
+				RayMgr::Ray diffuseRay;
+				diffuseRay.origin = firstCollision->position;
+				diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
 
-			//! Color material if light is reached
-			RayMgr::CollisionInfo* diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay, nullptr); // need to allow self collision
-			if (diffuseCol == nullptr) {	// Bad check, need to check if light is collided with (in case something is behind the light)
-				//! Calculate intensity
-				double intensity = colInfo->normal.Dot(diffuseRay.direction);
+				//! Color material if light is reached
+				RayMgr::CollisionInfo* diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay, nullptr); // need to allow self collision
+				if (diffuseCol == nullptr) {	// Bad check, need to check if light is collided with (in case something is behind the light)
+					//! Calculate intensity
+					double intensity = firstCollision->normal.Dot(diffuseRay.direction);
 
-				//! Set pixel color
-				const Util::Vector3<double>& color = colInfo->object->GetMaterial().color * intensity;
-				int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
-				this->window.SetPixel(px, py, colorAdj);
+					//! Calculate color
+					cDiffuse = firstCollision->object->GetMaterial().color * intensity;
+				}
+				else {
+					cDiffuse = { 0,0,0 };
+					delete diffuseCol;
+				}
 			}
 			else {
-				this->window.SetPixel(px, py, 0x000000FF);
+				cDiffuse = { 0,0,0 };
+			}
+
+			/* ----------------------------------------------------------------
+			* Handle spectral reflection
+			* ---------------------------------------------------------------- */
+			if (reflectivity > 0) {
+				//! Determine reflection ray
+				RayMgr::Ray reflRay;
+				reflRay.origin = firstCollision->position;
+				reflRay.direction = ray.direction - 2 * (ray.direction.Dot(firstCollision->normal)) * firstCollision->normal;
+
+				// TODO: This should be recursive with max depth
+
+				//! Find first collision
+				RayMgr::CollisionInfo* reflCollision = RayMgr::GetFirstCollision(*world, reflRay, nullptr);
+
+				if (reflCollision == nullptr) {
+					cRefl = { 0,0,0 };
+				}
+				else {
+					//! TODO: This should be diffuse (and rest of light)
+					cRefl = reflCollision->object->GetMaterial().color;
+					delete reflCollision;
+				}
+			}
+			else {
+				cRefl = { 0,0,0 };
+			}
+
+			/* ----------------------------------------------------------------
+			* Handle refraction
+			* ---------------------------------------------------------------- */
+			if (transparency > 0) {
+				//! Determine refraction ray
+				// TODO: Refract
+				RayMgr::Ray refrRay;
+				refrRay.origin = firstCollision->position;
+				refrRay.direction = ray.direction;
+
+				// TODO: This should be recursive with max depth
+
+				//! Find first collision
+				RayMgr::CollisionInfo* reflCollision = RayMgr::GetFirstCollision(*world, refrRay, firstCollision->object);
+
+				if (reflCollision == nullptr) {
+					cRefl = { 0,0,0 };
+				}
+				else {
+					//! TODO: This should be diffuse (and rest of light)
+					cRefl = reflCollision->object->GetMaterial().color;
+					delete reflCollision;
+				}
+			}
+			else {
+				cRefr = { 0,0,0 };
 			}
 			
-			delete colInfo;
-			delete diffuseCol;
+			/* ----------------------------------------------------------------
+			* Obtain total light value
+			* ---------------------------------------------------------------- */
+			Util::Vector3 totalColor = (cDiffuse * diffuse) + (cRefl * reflectivity) + (cRefr * transparency);
+			int colorAdj = (int)totalColor.x << 6 * 4 | (int)totalColor.y << 4 * 4 | (int)totalColor.z << 2 * 4 | 0xFF;
+			this->window.SetPixel(px, py, colorAdj);
+
+			delete firstCollision;
 		}
 
 		/* ----------------------------------------------------------------
