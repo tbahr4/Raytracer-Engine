@@ -55,6 +55,52 @@ namespace Renderer {
 		SDL_Delay(1 / 60);
 	}
 
+	//! RenderFrame
+	//! Renders a single frame to the screen
+	//! 
+	void Renderer::RenderFrame(Player::Player* player) {
+		/* ----------------------------------------------------------------
+		 * Generate rays from given screen frame
+		 * ---------------------------------------------------------------- */
+		std::vector<RayMgr::Ray> rays = GenerateRays(player->GetCamera(), display.GetWidth(), display.GetHeight());
+
+		/*
+		
+			foreach ray
+				vec3 light = CalcTotalLight
+
+
+			CalcTotalLight(maxDepth):
+				_CalcTotalLightHelper(depth=0, maxDepth=N)		# max depth is total depth (reflect, refract, reflect = 3, not 2 and 1) (still a lot of iterations...)
+
+			_CalcTotalLightHelper(ray, depth, maxDepth):		
+				if (depth > maxDepth) {
+					return {0,0,0};
+				}
+
+				col = GetFirstCollision()
+
+				// Get rays
+				rayDiffuse = GetDiffuseRay()
+				rayRefl = GetReflectionRay()
+				rayRefr = GetRefractionRay()
+
+				// Get light components
+				pDiffuse = X (diffuse)
+				pReflect = Y (reflectivity)
+				pRefract = Z (transparency)
+
+				// Get component light
+				cDiffuse = *** easy calc ***
+				cReflection = _CalcTotalLightHelper(rayRefl, depth + 1, maxDepth)
+				cRefraction = _CalcTotalLightHelper(rayRefr, depth + 1, maxDepth)
+
+				// Handle totals
+				tot = cDiffuse * pDiffuse + cReflect * pReflect + cRefract * pRefract
+		
+		*/
+	}
+
 	//! RenderFrameTest
 	//! Debug test command
 	//! 
@@ -68,28 +114,10 @@ namespace Renderer {
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
 		 * ---------------------------------------------------------------- */
-
-		// Forward vector
-		Util::Vector3<double> camForward = camera->GetForwardVector();
-		double roll = rotation.roll * Util::PI / 180;
-
-		// World reference vector for RD vectors
-		Util::Vector3<double> worldRefVec = Util::Vector3<double>::Up();
-		if (std::abs(camForward.Dot(worldRefVec))) {
-			worldRefVec = Util::Vector3<double>::Forward();
-		}
-		
-		// Compute world axis orthogonal vectors
-		Util::Vector3<double> camRightOrth = -1 * camForward.Cross(worldRefVec);
-		Util::Vector3<double> camUpOrth = camRightOrth.Cross(camForward);
-	
-
-		// Roll camera RU vectors
-		Util::Vector3<double> camRight = camRightOrth * std::cos(roll) +
-										 camUpOrth * std::sin(roll);
-
-		Util::Vector3<double> camUp = camUpOrth * std::cos(roll) -
-									  camRightOrth * std::sin(roll);
+		Player::Camera::FRUVector& fruVector = camera->GetFRUVector();
+		Util::Vector3<double>& camForward = fruVector.forward;
+		Util::Vector3<double>& camRight = fruVector.right;
+		Util::Vector3<double>& camUp = fruVector.up;
 
 		/* ----------------------------------------------------------------
 		 * Generate rays
@@ -250,6 +278,48 @@ namespace Renderer {
 		inputMgr->ProcessActivityState();	// Process valid activities
 		display.RenderFrame(this->window);
 		SDL_Delay(1 / 60);
+	}
+
+	//! GenerateRays
+	//! Generates a list of rays from the given camera properties and frame size
+	//! 
+	std::vector<RayMgr::Ray> Renderer::GenerateRays(Player::Camera* camera, int frameWidth, int frameHeight) {
+		/* ----------------------------------------------------------------
+		 * Get camera FRU vector information
+		 * ---------------------------------------------------------------- */
+		Player::Camera::FRUVector& fruVector = camera->GetFRUVector();
+		Util::Vector3<double>& camForward = fruVector.forward;
+		Util::Vector3<double>& camRight = fruVector.right;
+		Util::Vector3<double>& camUp = fruVector.up;
+
+		/* ----------------------------------------------------------------
+		 * Generate rays
+		 * ---------------------------------------------------------------- */
+		std::vector<RayMgr::Ray> rays(frameWidth * frameHeight);
+
+		double halfWidth = tan((camera->GetFOV() * Util::PI / 180) / 2);
+		double aspectRatio = frameWidth / frameHeight;
+		double halfHeight = halfWidth / aspectRatio;
+
+		int rayIdx = 0;
+		for (int py = 0; py < frameHeight; py++) {
+			for (int px = 0; px < frameWidth; px++) {
+				//! Normalize pixels to UV [-1,1]
+				double u = ((px + 0.5) / frameWidth) * 2 - 1;
+				double v = ((py + 0.5) / frameHeight) * 2 - 1;
+
+				//! Scale UV by half the screen size
+				double x = u * halfWidth;
+				double y = v * halfHeight;
+
+				//! Construct the ray
+				rays[rayIdx].origin = camera->GetPosition();
+				rays[rayIdx].direction = (x * camRight + y * camUp + camForward).Normalized();
+				rayIdx++;
+			}
+		}
+
+		return rays;
 	}
 
 }; // namespace Renderer

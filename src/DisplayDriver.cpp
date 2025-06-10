@@ -61,13 +61,6 @@ namespace Renderer {
 		return true;
 	}
 
-	//! IsActive
-	//! Returns the activity state of the display driver. Establishes readiness for processing commands
-	//! 
-	bool DisplayDriver::IsActive() const {
-		return this->isInitialized;
-	}
-
 	//! PollEvents
 	//! Processes input events from the user
 	//! 
@@ -102,5 +95,15 @@ namespace Renderer {
 		SDL_RenderTexture(renderer, texture, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
+
+	//! IsActive
+	//! Returns the activity state of the display driver. Establishes readiness for processing commands
+	//! 
+	bool DisplayDriver::IsActive() const {
+		return this->isInitialized;
+	}
+
+	int DisplayDriver::GetWidth() const { return windowWidth; }
+	int DisplayDriver::GetHeight() const { return windowHeight; }
 
 };	// namespace Renderer

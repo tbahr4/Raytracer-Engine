@@ -40,6 +40,10 @@ namespace Renderer {
 		//! Interface functions
 		void SetupFrameTest();
 		void RenderFrameTest(Player::Player* player, int screenWidth, int screenHeight);
+		void RenderFrame(Player::Player* player);
+
+	private:
+		std::vector<RayMgr::Ray> GenerateRays(Player::Camera* camera, int frameWidth, int frameHeight);
 	};
 
 }; // namespace Renderer

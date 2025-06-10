@@ -17,6 +17,13 @@ namespace Player {
 		double fov; // degrees
 
 	public:
+		struct FRUVector {
+			Util::Vector3<double> forward;
+			Util::Vector3<double> right;
+			Util::Vector3<double> up;
+		};
+
+	public:
 		//! Constructors
 		Camera(Util::Vector3<double> position, Util::Rotation rotation, double fov);
 
@@ -27,6 +34,8 @@ namespace Player {
 
 		//! Utility functions
 		Util::Vector3<double> GetForwardVector();
+		FRUVector GetFRUVector();
+
 	};
 
 }; // namespace Player

@@ -40,12 +40,14 @@ namespace Renderer {
 		//! Initialization
 		bool Init();
 
-		//! Accessors
-		bool IsActive() const;
-
 		//! Interface functions
 		void PollEvents();
 		void RenderFrame(const Frame& frame);
+		
+		//! Accessors
+		bool IsActive() const;
+		int GetWidth() const;
+		int GetHeight() const;
 
 	};
 
