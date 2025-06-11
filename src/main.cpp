@@ -57,7 +57,9 @@ int main() {
 	//! Engine loop
 	while (renderer->IsActive()) {
 		//renderer->SetupFrameTest();
-		renderer->RenderFrameTest(player, screenWidth, screenHeight);
+		//renderer->RenderFrameTest(player, screenWidth, screenHeight);
+		renderer->RenderFrame(player);
+
 	}
 
 	delete renderer;

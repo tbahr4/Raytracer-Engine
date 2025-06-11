@@ -5,6 +5,7 @@
 #pragma once
 
 #include <queue>
+#include <vector>
 #include "Frame.h"
 #include "DisplayDriver.h"
 #include "RayMgr.h"
@@ -44,6 +45,14 @@ namespace Renderer {
 
 	private:
 		std::vector<RayMgr::Ray> GenerateRays(Player::Camera* camera, int frameWidth, int frameHeight);
+		Util::Vector3<double> CalcTotalLight(const RayMgr::Ray& ray, int maxDepth);
+
+		std::vector<RayMgr::Ray> GetDiffuseRays(RayMgr::CollisionInfo* colInfo);
+		RayMgr::Ray GetReflectionRay(const RayMgr::Ray& ray, RayMgr::CollisionInfo* colInfo);
+		RayMgr::Ray GetRefractionRay(const RayMgr::Ray& ray, RayMgr::CollisionInfo* colInfo);
+
+		//! Helper functions
+		Util::Vector3<double> _CalcTotalLightHelper(const RayMgr::Ray& ray, int depth, int maxDepth);
 	};
 
 }; // namespace Renderer
