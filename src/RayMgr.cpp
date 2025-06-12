@@ -54,9 +54,20 @@ namespace Renderer {
 					//! Check for collision
 					//! discriminant < 0 -> miss
 					if (discriminant >= 0) {
-						double distance = (-b - std::sqrt(discriminant)) / (2 * a);
+						double roots[] = { 
+							(-b - std::sqrt(discriminant)) / (2 * a), 
+							(-b + std::sqrt(discriminant)) / (2 * a)
+						};
 
-						if (distance >= -1e-9 && distance < minDist) {	// Ignore collisions behind ray origin
+						//! Get index of smallest positive root
+						int minPosRootIdx = (roots[0] > 0) ? 0 : (roots[1] > 0 ? 1 : -1);
+						if (minPosRootIdx == -1) {
+							continue;	// No collision
+						}
+
+						double distance = roots[minPosRootIdx];
+
+						if (distance >= 1e-9 && distance < minDist) {	// Ignore collisions behind ray origin
 							minDist = distance;
 							if (collision == nullptr) {
 								collision = new CollisionInfo();
@@ -66,6 +77,10 @@ namespace Renderer {
 							collision->object = object;
 							collision->position = ray.origin + ray.direction * distance;
 							collision->normal = (collision->position - sphereCenter).Normalized();
+
+							//! Handle exit collision (identical to entry if minPosRootIdx is 1)
+							collision->exitDistance = roots[1];
+							collision->exitPosition = ray.origin + ray.direction * collision->exitDistance;
 						}
 					}
 

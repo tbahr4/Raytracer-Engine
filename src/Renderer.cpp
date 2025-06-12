@@ -183,6 +183,7 @@ namespace Renderer {
 			RayMgr::CollisionInfo* diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay, nullptr);
 			if (diffuseCol == nullptr) {	// TODO: Bad check, need to check if light is collided with (in case something is behind the light). Make light an object to make collision info check simply "isLight?"
 				// Not obscured by an object before reaching light
+				// FIXME: Diffuse collisions with transparent objects allows light to pass through
 
 				//! Calculate intensity
 				double intensity = std::max(0.0, firstCol->normal.Dot(diffuseRay.direction));
@@ -247,7 +248,7 @@ namespace Renderer {
 		// FIXME: Ray should start after collision
 		// TODO: Apply refraction
 		RayMgr::Ray refrRay;
-		refrRay.origin = colInfo->position;
+		refrRay.origin = colInfo->exitPosition;
 		refrRay.direction = ray.direction;
 		return refrRay;
 	}

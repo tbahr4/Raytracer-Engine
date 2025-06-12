@@ -20,12 +20,17 @@ namespace Renderer {
 		};
 
 		struct CollisionInfo {
+			//! Primary collision
 			World::Object* object;
 			Util::Vector3<double> position;
 			Util::Vector3<double> normal;
 			double distance;
 
-			CollisionInfo() : object(nullptr), position(), normal(), distance(0) {}
+			//! Secondary collision (on exit)
+			Util::Vector3<double> exitPosition;
+			double exitDistance;
+
+			CollisionInfo() : object(nullptr), position(), normal(), distance(0), exitPosition(), exitDistance(0) {}
 		};
 
 		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj);
