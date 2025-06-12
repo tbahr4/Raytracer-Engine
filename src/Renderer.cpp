@@ -59,6 +59,8 @@ namespace Renderer {
 	//! Renders a single frame to the screen
 	//! 
 	void Renderer::RenderFrame(Player::Player* player) {
+		// TODO: This can be decomposed more
+
 		/* ----------------------------------------------------------------
 		 * Generate rays from given screen frame
 		 * ---------------------------------------------------------------- */
@@ -88,42 +90,6 @@ namespace Renderer {
 		inputMgr->ProcessActivityState();	// Process valid activities
 		display.RenderFrame(this->window);
 		SDL_Delay(1 / 60);
-
-		/*
-		
-			foreach ray
-				vec3 light = CalcTotalLight(ray)
-
-
-			CalcTotalLight(ray, maxDepth):
-				_CalcTotalLightHelper(ray, depth=0, maxDepth=N)		# max depth is total depth (reflect, refract, reflect = 3, not 2 and 1) (still a lot of iterations...)
-
-			_CalcTotalLightHelper(ray, depth, maxDepth):		
-				if (depth > maxDepth) {
-					return {0,0,0};
-				}
-
-				col = GetFirstCollision()
-
-				// Get rays
-				rayDiffuse = GetDiffuseRay()
-				rayRefl = GetReflectionRay()
-				rayRefr = GetRefractionRay()
-
-				// Get light components
-				pDiffuse = X (diffuse)
-				pReflect = Y (reflectivity)
-				pRefract = Z (transparency)
-
-				// Get component light
-				cDiffuse = *** easy calc ***
-				cReflection = _CalcTotalLightHelper(rayRefl, depth + 1, maxDepth)
-				cRefraction = _CalcTotalLightHelper(rayRefr, depth + 1, maxDepth)
-
-				// Handle totals
-				tot = cDiffuse * pDiffuse + cReflect * pReflect + cRefract * pRefract
-		
-		*/
 	}
 
 	//! CalcTotalLight
