@@ -19,7 +19,7 @@ namespace Renderer {
 
 	class Renderer {
 	private:
-		std::queue<Frame> renderQueue;
+		//std::queue<std::pair<Util::Vector2<double>, Frame*>> renderQueue; // TODO: This should be a processing queue for calling functions, not creating a frame to apply
 		Frame window;
 		DisplayDriver display;
 		World::World* world;
@@ -27,6 +27,9 @@ namespace Renderer {
 
 		//! Internal variables
 		bool isInitialized = false;
+
+		//! Properties
+		const int maxRayDepth = 1;	// TODO: Configurable
 
 	public:
 		//! Constructors
@@ -39,9 +42,8 @@ namespace Renderer {
 		bool IsActive() const;	
 
 		//! Interface functions
-		void SetupFrameTest();
-		void RenderFrameTest(Player::Player* player, int screenWidth, int screenHeight);
-		void RenderFrame(Player::Player* player);
+		void ProduceWorldFrame(Player::Player* player);
+		void DisplayFrame();
 
 	private:
 		std::vector<RayMgr::Ray> GenerateRays(Player::Camera* camera, int frameWidth, int frameHeight);

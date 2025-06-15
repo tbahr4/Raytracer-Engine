@@ -7,6 +7,7 @@
 #include <vector>
 #include "Object.h"
 
+#include "Singleton.h"
 
 
 namespace World {
