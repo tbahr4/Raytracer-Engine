@@ -19,7 +19,7 @@ namespace Player {
 	//! GetForwardVector
 	//! Returns the forward direction vector of the camera
 	//! 
-	Util::Vector3<double> Camera::GetForwardVector() {
+	const Util::Vector3<double> Camera::GetForwardVector() const {
 		Util::Vector3<double> forward = Util::Vector3<double>(
 			std::cos(rotation.pitch) * std::sin(rotation.yaw),
 			std::sin(rotation.pitch),
@@ -32,9 +32,9 @@ namespace Player {
 	//! GetFRUVector
 	//! Returns the forward, right, and up direction vectors of the camera
 	//! 
-	Camera::FRUVector Camera::GetFRUVector() {
+	const Camera::FRUVector Camera::GetFRUVector() const {
 		// Forward vector
-		Util::Vector3<double>& camForward = GetForwardVector();
+		const Util::Vector3<double>& camForward = GetForwardVector();
 		double roll = rotation.roll * Util::PI / 180;
 
 		// World reference vector for RD vectors
@@ -64,7 +64,9 @@ namespace Player {
 	}
 
 	//! Accessors/Mutators
+	const Util::Vector3<double> Camera::GetPosition() const { return position; }
 	Util::Vector3<double>& Camera::GetPosition() { return position; }
+	const Util::Rotation Camera::GetRotation() const { return rotation; }
 	Util::Rotation& Camera::GetRotation() { return rotation; }
 	double Camera::GetFOV() const { return fov; }
 

@@ -10,7 +10,7 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr)
 	: window("WindowFrame", windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
@@ -43,7 +43,7 @@ namespace Renderer {
 	//! ProduceWorldFrame
 	//! Produces a world frame and stores within internal buffers for later rendering
 	//! 
-	void Renderer::ProduceWorldFrame(Player::Player* player) {
+	void Renderer::ProduceWorldFrame(std::shared_ptr<Player::Player> player) {
 		// TODO: This can be decomposed more
 
 		/* ----------------------------------------------------------------
@@ -99,7 +99,7 @@ namespace Renderer {
 		}
 
 		//! Get first collision
-		RayMgr::CollisionInfo* firstCol = RayMgr::GetFirstCollision(*world, ray, nullptr);
+		std::unique_ptr<RayMgr::CollisionInfo> firstCol = RayMgr::GetFirstCollision(*world, ray);
 
 		if (firstCol == nullptr) {
 			// No further contribution
@@ -113,14 +113,13 @@ namespace Renderer {
 
 		if (pctDiff < 0) {
 			LOG_ERROR("Renderer: Invalid object properties. Sum of reflectivity and transparency must be at most 1.0");
-			delete firstCol;
 			return { 0,0,0 };
 		}
 
 		//! Get coincident rays
-		std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol);  
-		RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol);
-		RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol);
+		std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());  
+		RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
+		RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
 
 		// TODO: return early if max depth
 		// TODO: only spawn ray if light property allows it
@@ -136,7 +135,7 @@ namespace Renderer {
 			const RayMgr::Ray& diffuseRay = rayDiffs[lightI];
 
 			//! Color material if light is reached
-			RayMgr::CollisionInfo* diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay, nullptr);
+			std::unique_ptr<RayMgr::CollisionInfo> diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay);
 			if (diffuseCol == nullptr) {	// TODO: Bad check, need to check if light is collided with (in case something is behind the light). Make light an object to make collision info check simply "isLight?"
 				// Not obscured by an object before reaching light
 				// FIXME: Diffuse collisions with transparent objects allows light to pass through
@@ -152,11 +151,10 @@ namespace Renderer {
 			}
 			else {
 				diffuseComps[lightI] = { 0,0,0 };
-				delete diffuseCol;
 			}
 		}
-
-		delete firstCol;
+		
+		firstCol.release();
 		
 		// Sum diffuse light contributions
 		// TODO: add HDR rendering for exceeding 255 intensity
@@ -177,49 +175,17 @@ namespace Renderer {
 		return totalLight;
 	}
 
-	//! GetDiffuseRays
-	//! Returns the list of rays used to calculate diffuse light
-	//! 
-	std::vector<RayMgr::Ray> Renderer::GetDiffuseRays(RayMgr::CollisionInfo* colInfo) {		
-		// FIXME: Make this work in a loop of all lights
-		const Util::Vector3<double> lightPos = { 0,5,3 };
-		RayMgr::Ray diffuseRay;
-		diffuseRay.origin = colInfo->position;
-		diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
-
-		std::vector<RayMgr::Ray> rays{ diffuseRay };
-		return rays;
-	}
-
-	RayMgr::Ray Renderer::GetReflectionRay(const RayMgr::Ray& ray, RayMgr::CollisionInfo* colInfo) {
-		// FIXME: check collision null
-		RayMgr::Ray reflRay;
-		reflRay.origin = colInfo->position;
-		reflRay.direction = ray.direction - 2 * (ray.direction.Dot(colInfo->normal)) * colInfo->normal;
-		return reflRay;
-	}
-
-	RayMgr::Ray Renderer::GetRefractionRay(const RayMgr::Ray& ray, RayMgr::CollisionInfo* colInfo) {
-		// FIXME: check collision null
-		// FIXME: Ray should start after collision
-		// TODO: Apply refraction
-		RayMgr::Ray refrRay;
-		refrRay.origin = colInfo->exitPosition;
-		refrRay.direction = ray.direction;
-		return refrRay;
-	}
-
 	//! GenerateRays
 	//! Generates a list of rays from the given camera properties and frame size
 	//! 
-	std::vector<RayMgr::Ray> Renderer::GenerateRays(Player::Camera* camera, int frameWidth, int frameHeight) {
+	std::vector<RayMgr::Ray> Renderer::GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight) {
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
 		 * ---------------------------------------------------------------- */
-		Player::Camera::FRUVector& fruVector = camera->GetFRUVector();
-		Util::Vector3<double>& camForward = fruVector.forward;
-		Util::Vector3<double>& camRight = fruVector.right;
-		Util::Vector3<double>& camUp = fruVector.up;
+		const Player::Camera::FRUVector& fruVector = camera->GetFRUVector();
+		const Util::Vector3<double>& camForward = fruVector.forward;
+		const Util::Vector3<double>& camRight = fruVector.right;
+		const Util::Vector3<double>& camUp = fruVector.up;
 
 		/* ----------------------------------------------------------------
 		 * Generate rays

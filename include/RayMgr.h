@@ -33,13 +33,11 @@ namespace Renderer {
 			CollisionInfo() : object(nullptr), position(), normal(), distance(0), exitPosition(), exitDistance(0) {}
 		};
 
-		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj);
+		std::unique_ptr<CollisionInfo> GetFirstCollision(World::World& world, const Ray& ray);
 
-		Ray* GetDiffuseRay(Ray* initialRay, CollisionInfo* colInfo);
-		Ray* GetSpecularRay(Ray* initialRay, CollisionInfo* colInfo);
-		Ray* GetRefractionRay(Ray* initialRay, CollisionInfo* colInfo);
-
-		Util::Vector3<double> CalcIncidentLight(const Util::Vector3<double>& pointLightPos, const Util::Vector3<double>& pos);
+		std::vector<RayMgr::Ray> GetDiffuseRays(const RayMgr::CollisionInfo* colInfo);
+		RayMgr::Ray GetReflectionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo);
+		RayMgr::Ray GetRefractionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo);
 
 	}; // namespace RayMgr
 

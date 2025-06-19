@@ -38,13 +38,13 @@ namespace InputMgr {
 		};
 
 	private:
-		Player::Player* player;
-		World::World* world;
+		std::shared_ptr<Player::Player> player;
+		std::shared_ptr<World::World> world;
 
 		std::unordered_set<INPUT_ACTION> activeActions;	// Active keypresses/actions
 
 	public:
-		InputMgr(Player::Player* player, World::World* world);
+		InputMgr(std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world);
 
 		void HandleEvent(const SDL_Event& event);
 		void ProcessActivityState();

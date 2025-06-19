@@ -14,9 +14,9 @@ namespace Renderer {
 		//! Returns the nearest object collision, if any, from the given ray
 		//! Ignores the given object if specified
 		//! 
-		CollisionInfo* GetFirstCollision(World::World& world, const Ray& ray, World::Object* ignoreObj) {
+		std::unique_ptr<CollisionInfo> GetFirstCollision(World::World& world, const Ray& ray) {
 			// Maintain the shortest distance collision
-			CollisionInfo* collision = nullptr;
+			std::unique_ptr<CollisionInfo> collision = nullptr;
 			double minDist = INFINITY;
 
 			//! Perform collision logic for all objects by default
@@ -24,7 +24,7 @@ namespace Renderer {
 			for (int objI = 0; objI < nObjects; objI++) {
 				World::Object* object = world.GetObject(objI);
 
-				if (object == nullptr || object == ignoreObj) {
+				if (object == nullptr) {
 					continue;
 				}
 
@@ -70,7 +70,7 @@ namespace Renderer {
 						if (distance >= 1e-9 && distance < minDist) {	// Ignore collisions behind ray origin
 							minDist = distance;
 							if (collision == nullptr) {
-								collision = new CollisionInfo();
+								collision = std::make_unique<CollisionInfo>();
 							}
 
 							collision->distance = distance;
@@ -92,20 +92,36 @@ namespace Renderer {
 			return collision;
 		}
 
-		Ray* RayMgr::GetDiffuseRay(Ray* initialRay, CollisionInfo* colInfo) {
-			return nullptr;
+		//! GetDiffuseRays
+		//! Returns the list of rays used to calculate diffuse light
+		//! 
+		std::vector<RayMgr::Ray> RayMgr::GetDiffuseRays(const RayMgr::CollisionInfo* colInfo) {
+			// FIXME: Make this work in a loop of all lights
+			const Util::Vector3<double> lightPos = { 0,5,3 };
+			RayMgr::Ray diffuseRay;
+			diffuseRay.origin = colInfo->position;
+			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
+
+			std::vector<RayMgr::Ray> rays{ diffuseRay };
+			return rays;
 		}
 
-		Ray* RayMgr::GetSpecularRay(Ray* initialRay, CollisionInfo* colInfo) {
-			return nullptr;
+		RayMgr::Ray RayMgr::GetReflectionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
+			// FIXME: check collision null
+			RayMgr::Ray reflRay;
+			reflRay.origin = colInfo->position;
+			reflRay.direction = ray.direction - 2 * (ray.direction.Dot(colInfo->normal)) * colInfo->normal;
+			return reflRay;
 		}
 
-		Ray* RayMgr::GetRefractionRay(Ray* initialRay, CollisionInfo* colInfo) {
-			return nullptr;
-		}
-
-		Util::Vector3<double> RayMgr::CalcIncidentLight(const Util::Vector3<double>& pointLightPos, const Util::Vector3<double>& pos) {
-			return Util::Vector3<double>(0, 0, 0);
+		RayMgr::Ray RayMgr::GetRefractionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
+			// FIXME: check collision null
+			// FIXME: Ray should start after collision
+			// TODO: Apply refraction
+			RayMgr::Ray refrRay;
+			refrRay.origin = colInfo->exitPosition;
+			refrRay.direction = ray.direction;
+			return refrRay;
 		}
 
 	}; // namespace RayMgr

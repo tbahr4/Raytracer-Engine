@@ -28,13 +28,15 @@ namespace Player {
 		Camera(Util::Vector3<double> position, Util::Rotation rotation, double fov);
 
 		//! Accessors/Mutators
+		const Util::Vector3<double> GetPosition() const;
 		Util::Vector3<double>& GetPosition();
+		const Util::Rotation GetRotation() const;
 		Util::Rotation& GetRotation();
 		double GetFOV() const;
 
 		//! Utility functions
-		Util::Vector3<double> GetForwardVector();
-		FRUVector GetFRUVector();
+		const Util::Vector3<double> GetForwardVector() const;
+		const FRUVector GetFRUVector() const;
 
 	};
 

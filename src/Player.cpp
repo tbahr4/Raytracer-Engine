@@ -8,12 +8,13 @@
 
 namespace Player {
 
-	Player::Player(Camera* camera)
-		: camera(camera)
+	Player::Player(std::unique_ptr<Camera> camera)
+		: camera(std::move(camera))
 	{}
 
 	//! Accessors
-	Camera* Player::GetCamera() { return camera; }
+	const Camera* Player::GetCamera() const { return camera.get(); }
+	Camera* Player::GetCamera() { return camera.get(); }
 	double Player::GetMovementSpeed() const { return movementSpeed; }
 
 }; // namespace Player 

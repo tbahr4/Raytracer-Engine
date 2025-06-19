@@ -10,7 +10,7 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr)
+	DisplayDriver::DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr)
 		: windowTitle(windowTitle)
 		, windowWidth(windowWidth)
 		, windowHeight(windowHeight)
@@ -24,7 +24,6 @@ namespace Renderer {
 		if (renderer) SDL_DestroyRenderer(renderer);
 		if (window) SDL_DestroyWindow(window);
 		SDL_Quit();
-		delete inputMgr;
 	}
 
 	//! Init

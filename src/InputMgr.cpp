@@ -10,7 +10,7 @@ namespace InputMgr {
 
 	//! Constructor
 	//! 
-	InputMgr::InputMgr(Player::Player* player, World::World* world)
+	InputMgr::InputMgr(std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world)
 		: player(player)
 		, world(world)
 	{}

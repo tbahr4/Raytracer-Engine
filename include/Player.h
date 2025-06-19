@@ -16,13 +16,14 @@ namespace Player {
 		const double movementSpeed = 1;
 
 		//! Component references
-		Camera* camera;
+		std::unique_ptr<Camera> camera;
 
 	public:
 		//! Constructors
-		Player(Camera* camera);
+		Player(std::unique_ptr<Camera> camera);
 
 		//! Accessors
+		const Camera* GetCamera() const;
 		Camera* GetCamera();
 		double GetMovementSpeed() const;
 	};

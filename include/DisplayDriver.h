@@ -30,11 +30,11 @@ namespace Renderer {
 		bool isInitialized = false;
 		void* pixels;	// Raw pixel buffer
 		int pitch;		// bytes per row of the pixel buffer
-		InputMgr::InputMgr* inputMgr;
+		std::shared_ptr<InputMgr::InputMgr> inputMgr;
 
 	public:
 		//! Constructors
-		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, Player::Player* player, World::World* world, InputMgr::InputMgr* inputMgr);
+		DisplayDriver(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr);
 		~DisplayDriver();
 
 		//! Initialization
