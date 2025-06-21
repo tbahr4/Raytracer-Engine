@@ -18,6 +18,7 @@ namespace World {
 	public:
 		int GetObjectCount() const;
 		Object* GetObject(int index);
+		const Object* GetObject(int index) const;
 		void AddObject(Object& obj);
 
 	};

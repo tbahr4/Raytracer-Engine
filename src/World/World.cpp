@@ -17,9 +17,21 @@ namespace World {
 	}
 
 	//! GetObject
-	//! Returns a reference to the object at the specified object
+	//! Returns a reference to the object at the specified index
 	//! 
 	Object* World::GetObject(int index) {
+		if (index >= GetObjectCount()) {
+			LOG_ERROR("Attempted to retrieve world object using invalid index");
+			return nullptr;
+		}
+
+		return &objects[index];
+	}
+
+	//! GetObject
+	//! Returns a reference to the object at the specified index
+	//! 
+	const Object* World::GetObject(int index) const {
 		if (index >= GetObjectCount()) {
 			LOG_ERROR("Attempted to retrieve world object using invalid index");
 			return nullptr;
