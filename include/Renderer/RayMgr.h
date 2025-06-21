@@ -22,12 +22,15 @@ namespace Renderer {
 		struct CollisionInfo {
 			//! Primary collision
 			World::Object* object;
+
+			//! Object entry collision
 			Util::Vector3<double> position;
 			Util::Vector3<double> normal;
 			double distance;
 
-			//! Secondary collision (on exit)
+			//! Object exit collision
 			Util::Vector3<double> exitPosition;
+			Util::Vector3<double> exitNormal;
 			double exitDistance;
 
 			CollisionInfo() : object(nullptr), position(), normal(), distance(0), exitPosition(), exitDistance(0) {}

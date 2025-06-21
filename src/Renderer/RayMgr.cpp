@@ -40,6 +40,7 @@ namespace Renderer {
 					
 					Util::Vector3<double> sphereCenter = object->GetPosition();
 					double sphereRadius = 1;	// FIXME: Need children types of shape object
+					// TODO: Add rotation, scale of objects (sphere rotation does not matter)
 
 					Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
 
@@ -73,14 +74,17 @@ namespace Renderer {
 								collision = std::make_unique<CollisionInfo>();
 							}
 
-							collision->distance = distance;
 							collision->object = object;
+
+							//! Populate entry collision
+							collision->distance = distance;
 							collision->position = ray.origin + ray.direction * distance;
 							collision->normal = (collision->position - sphereCenter).Normalized();
 
-							//! Handle exit collision (identical to entry if minPosRootIdx is 1)
+							//! Populate exit collision (identical to entry if minPosRootIdx is 1)
 							collision->exitDistance = roots[1];
 							collision->exitPosition = ray.origin + ray.direction * collision->exitDistance;
+							collision->exitNormal = (collision->exitPosition - sphereCenter).Normalized();
 						}
 					}
 
@@ -107,7 +111,7 @@ namespace Renderer {
 			diffuseRay.origin = colInfo->position;
 			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
 
-			// Construct rays
+			//! Construct rays
 			std::vector<RayMgr::Ray> rays{ diffuseRay };
 			return rays;
 		}
@@ -118,7 +122,7 @@ namespace Renderer {
 				return RayMgr::Ray();
 			}
 
-			// Construct ray
+			//! Construct ray
 			RayMgr::Ray reflRay;
 			reflRay.origin = colInfo->position;
 			reflRay.direction = ray.direction - 2 * (ray.direction.Dot(colInfo->normal)) * colInfo->normal;
@@ -131,10 +135,53 @@ namespace Renderer {
 				return RayMgr::Ray();
 			}
 
-			// Construct ray
+			// TODO: Functionize
+			/* ----------------------------------------------------------------
+			* Apply refraction via Snell's law
+			* ---------------------------------------------------------------- */
+			const double n1 = 1;		// TODO: Add to material mgr?
+			const double n2 = 1.5;		// TODO: Add to material
+
+			//! Determine refracted entry vector
+			//! 
+			double eta = n1 / n2;	// Refractive index ratio
+			double cosI = ray.direction.Reversed().Dot(colInfo->normal);
+			double sinT2 = eta * eta * (1.0 - cosI * cosI);	// Sin^2(theta_t)
+
+			if (sinT2 > 1) {
+				// Total internal reflection - No refraction occurs
+				LOG_WARNING("GetRefractionRay: Unimplemented reflection");
+				return RayMgr::Ray(); // TODO: Handle internal reflection
+			}
+
+			double cosT = std::sqrt(1 - sinT2);	// Cosine of transmitted angle
+
+			Util::Vector3<double> entryDir = (eta * ray.direction + (eta * cosI - cosT) * colInfo->normal).Normalized();
+
+
+			//! Determine refracted exit vector
+			//! 
+			eta = n2 / n1;	// Inverse
+			cosI = entryDir.Dot(colInfo->exitNormal);
+			sinT2 = eta * eta * (1.0 - cosI * cosI);	// Sin^2(theta_t)
+
+			if (sinT2 > 1) {
+				// Total internal reflection - No refraction occurs
+				LOG_WARNING("GetRefractionRay: Unimplemented reflection");
+				return RayMgr::Ray(); // TODO: Handle internal reflection
+			}
+
+			cosT = std::sqrt(1 - sinT2);	// Cosine of transmitted angle
+
+			Util::Vector3<double> exitDir = (eta * entryDir + (eta * cosI - cosT) * colInfo->exitNormal).Normalized();
+
+
+			/* ----------------------------------------------------------------
+			* Construct ray
+			* ---------------------------------------------------------------- */
 			RayMgr::Ray refrRay;
 			refrRay.origin = colInfo->exitPosition;
-			refrRay.direction = ray.direction;
+			refrRay.direction = exitDir;
 			return refrRay;
 		}
 

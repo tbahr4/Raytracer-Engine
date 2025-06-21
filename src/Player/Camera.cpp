@@ -42,7 +42,7 @@ namespace Player {
 		}
 
 		// Compute world axis orthogonal vectors
-		Util::Vector3<double> camRightOrth = -1 * camForward.Cross(worldRefVec);
+		Util::Vector3<double> camRightOrth = camForward.Cross(worldRefVec).Reversed();
 		Util::Vector3<double> camUpOrth = camRightOrth.Cross(camForward);
 
 		// Roll camera RU vectors

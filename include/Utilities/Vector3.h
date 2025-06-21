@@ -40,6 +40,16 @@ namespace Util {
 			z /= magnitude;
 		}
 
+		void Reverse() {
+			x *= -1;
+			y *= -1;
+			z *= -1;
+		}
+
+		Vector3<T> Reversed() const {
+			return Vector3<T>(-x, -y, -z);
+		}
+
 		T Dot(const Vector3<T>& other) const {
 			return x * other.x + y * other.y + z * other.z;
 		}
@@ -50,6 +60,10 @@ namespace Util {
 				z * other.x - x * other.z,
 				x * other.y - y * other.x
 			);
+		}
+
+		double AngleBetween(const Vector3<T>& other) const {
+			return std::acos(this->Dot(other) / (this->Magnitude() * other.Magnitude()));
 		}
 
 		//! Constant vectors

@@ -114,7 +114,7 @@ namespace Renderer {
 		std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());  
 		RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
 		RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
-
+		
 		// TODO: return early if max depth
 		// TODO: only spawn ray if light property allows it
 
@@ -148,15 +148,15 @@ namespace Renderer {
 			}
 		}
 		
-		firstCol.release();
-		
+		firstCol.reset();
+
 		// Sum diffuse light contributions
 		// TODO: add HDR rendering for exceeding 255 intensity
 		Util::Vector3<double> colDiff = { 0,0,0 };
 		for (int lightI = 0; lightI < diffuseComps.size(); lightI++) {
 			colDiff = colDiff + diffuseComps[lightI];
 		}
-
+		
 		//! Reflection and refraction
 		Util::Vector3<double> colRefl = _CalcTotalLightHelper(rayRefl, depth + 1, maxRayDepth);
 		Util::Vector3<double> colRefr = _CalcTotalLightHelper(rayRefr, depth + 1, maxRayDepth);
