@@ -44,8 +44,6 @@ namespace Renderer {
 	//! Produces a world frame and stores within internal buffers for later rendering
 	//! 
 	void Renderer::ProduceWorldFrame(std::shared_ptr<Player::Player> player) {
-		// TODO: This can be decomposed more
-
 		/* ----------------------------------------------------------------
 		 * Generate rays from given screen frame
 		 * ---------------------------------------------------------------- */
@@ -59,16 +57,12 @@ namespace Renderer {
 			RayMgr::Ray& ray = rays[rayIdx];
 			Util::Vector3 color = CalcTotalLight(ray, maxRayDepth);
 
-			// Just set window pixel for now
+			// Set the window pixel
 			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
 			int px = rayIdx % display.GetWidth();
 			int py = rayIdx / display.GetWidth();
 			this->window.SetPixel(px, py, colorAdj);
 		}
-
-		
-
-
 	}
 
 	//! DisplayFrame

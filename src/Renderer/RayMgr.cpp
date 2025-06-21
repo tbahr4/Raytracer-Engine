@@ -96,18 +96,29 @@ namespace Renderer {
 		//! Returns the list of rays used to calculate diffuse light
 		//! 
 		std::vector<RayMgr::Ray> RayMgr::GetDiffuseRays(const RayMgr::CollisionInfo* colInfo) {
+			if (colInfo == nullptr) {
+				LOG_ERROR("GetDiffuseRays: Cannot create diffuse rays from null collision");
+				return std::vector<RayMgr::Ray>();
+			}
+
 			// FIXME: Make this work in a loop of all lights
 			const Util::Vector3<double> lightPos = { 0,5,3 };
 			RayMgr::Ray diffuseRay;
 			diffuseRay.origin = colInfo->position;
 			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
 
+			// Construct rays
 			std::vector<RayMgr::Ray> rays{ diffuseRay };
 			return rays;
 		}
 
 		RayMgr::Ray RayMgr::GetReflectionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
-			// FIXME: check collision null
+			if (colInfo == nullptr) {
+				LOG_ERROR("GetReflectionRay: Cannot create reflection ray from null collision");
+				return RayMgr::Ray();
+			}
+
+			// Construct ray
 			RayMgr::Ray reflRay;
 			reflRay.origin = colInfo->position;
 			reflRay.direction = ray.direction - 2 * (ray.direction.Dot(colInfo->normal)) * colInfo->normal;
@@ -115,9 +126,12 @@ namespace Renderer {
 		}
 
 		RayMgr::Ray RayMgr::GetRefractionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
-			// FIXME: check collision null
-			// FIXME: Ray should start after collision
-			// TODO: Apply refraction
+			if (colInfo == nullptr) {
+				LOG_ERROR("GetRefractionRay: Cannot create refraction ray from null collision");
+				return RayMgr::Ray();
+			}
+
+			// Construct ray
 			RayMgr::Ray refrRay;
 			refrRay.origin = colInfo->exitPosition;
 			refrRay.direction = ray.direction;
