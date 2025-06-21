@@ -37,9 +37,6 @@ namespace InputMgr {
 		case SDL_EVENT_KEY_UP:
 			activeActions.erase(action);
 			break;
-
-		default:
-			break;
 		}
 	}
 
