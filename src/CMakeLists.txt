@@ -1,0 +1,5 @@
+add_subdirectory(Renderer)
+add_subdirectory(World)
+add_subdirectory(Player)
+add_subdirectory("Material Mgr")
+add_subdirectory("Input Mgr")

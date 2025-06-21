@@ -31,7 +31,7 @@ namespace Renderer {
 	//! 
 	bool DisplayDriver::Init() {
 		//! Initialize SDL
-		if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			LOG_ERROR("SDL_Init Error: " + (std::string)SDL_GetError())
 				return false;
 		}

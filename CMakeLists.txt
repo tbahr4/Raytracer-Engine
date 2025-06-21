@@ -16,12 +16,20 @@ include(${CMAKE_CURRENT_BINARY_DIR}/cmake/CPM.cmake)
 
 set(LIBS)
 
+## Properties
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-## Source Files
-file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS src/*.cpp)
+
+## Gather all files
+file(GLOB_RECURSE SOURCE_FILES_ALL CONFIGURE_DEPENDS src/**/*.cpp)
+file(GLOB_RECURSE HEADER_FILES_ALL CONFIGURE_DEPENDS 
+	include/**/*.h 
+	include/**/*.hpp
+)
 
 
-## Dependencies
+
+## Additional dependencies
 
 # SDL
 CPMAddPackage("gh:libsdl-org/SDL#4c70aa3")
@@ -32,7 +40,36 @@ set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE) # Requires Perl and Nasm for libaom (
 CPMAddPackage("gh:libsdl-org/SDL_image#bcc97c0")
 list(APPEND LIBS SDL3_image::SDL3_image)
 
+
+
+
 ## Setup executable
-add_executable(${PROJECT_NAME} ${SRC_FILES})
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES_ALL} ${HEADER_FILES_ALL})
+add_subdirectory(src)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Utilities) # Add remaining header-only files
+include_directories(${CMAKE_SOURCE_DIR}/include) # Fix Intellisense pathing
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
+
+
+
+
+## Setup VS logical formatting
+
+# Folder structure - Top Level
+source_group("src" REGULAR_EXPRESSION "src/.*")
+source_group("include" REGULAR_EXPRESSION "include/.*")
+
+# Folder structure - src
+source_group("src\\Renderer" REGULAR_EXPRESSION "src/Renderer/.*")
+source_group("src\\World" REGULAR_EXPRESSION "src/World/.*")
+source_group("src\\Player" REGULAR_EXPRESSION "src/Player/.*")
+source_group("src\\Material Mgr" REGULAR_EXPRESSION "src/Material Mgr/.*")
+source_group("src\\Input Mgr" REGULAR_EXPRESSION "src/Input Mgr/.*")
+
+# Folder structure - include
+source_group("include\\Renderer" REGULAR_EXPRESSION "include/Renderer/.*")
+source_group("include\\World" REGULAR_EXPRESSION "include/World/.*")
+source_group("include\\Player" REGULAR_EXPRESSION "include/Player/.*")
+source_group("include\\Material Mgr" REGULAR_EXPRESSION "include/Material Mgr/.*")
+source_group("include\\Input Mgr" REGULAR_EXPRESSION "include/Input Mgr/.*")
+source_group("include\\Utilities" REGULAR_EXPRESSION "include/Utilities/.*")

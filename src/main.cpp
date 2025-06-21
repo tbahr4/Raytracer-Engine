@@ -18,6 +18,7 @@ const Util::Rotation startRot = Util::Rotation(0, 0, 0);
 constexpr char* windowTitle = "Raytracer";
 
 
+
 int main() {
 	/* ----------------------------------------------------------------
 	* Initialize components
