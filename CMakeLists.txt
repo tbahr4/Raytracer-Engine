@@ -59,7 +59,6 @@ list(APPEND LIBS SDL3_image::SDL3_image)
 ## Setup executable
 add_executable(${PROJECT_NAME} src/main.cpp ${SOURCE_FILES_ALL} ${HEADER_FILES_ALL})
 add_subdirectory(src)
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include/Utilities) # Add remaining header-only files
 include_directories(${CMAKE_SOURCE_DIR}/include) # Fix Intellisense pathing
 target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
@@ -78,6 +77,7 @@ source_group("src\\World" REGULAR_EXPRESSION "src/World/.*")
 source_group("src\\Player" REGULAR_EXPRESSION "src/Player/.*")
 source_group("src\\Material Mgr" REGULAR_EXPRESSION "src/Material Mgr/.*")
 source_group("src\\Input Mgr" REGULAR_EXPRESSION "src/Input Mgr/.*")
+source_group("src\\Utilities" REGULAR_EXPRESSION "src/Utilities/.*")
 
 # Folder structure - include
 source_group("include\\Renderer" REGULAR_EXPRESSION "include/Renderer/.*")
