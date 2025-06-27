@@ -30,6 +30,11 @@ namespace Renderer {
 	//! Initializes the SDL layer
 	//! 
 	bool DisplayDriver::Init() {
+		if (IsActive()) {
+			Util::Log::Error("Attempted to initialize an already active display driver");
+			return false;
+		}
+
 		//! Initialize SDL
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
 			Util::Log::Error("SDL_Init Error: " + (std::string)SDL_GetError());

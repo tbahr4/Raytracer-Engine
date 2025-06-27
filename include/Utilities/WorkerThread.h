@@ -55,12 +55,14 @@ namespace Util {
 		}
 
 		void Stop() {
-			{
-				std::lock_guard<std::mutex> lock(mutex);
-				isStopped = true;
+			if (!isStopped) {
+				{
+					std::lock_guard<std::mutex> lock(mutex);
+					isStopped = true;
+				}
+				cond.notify_one();
+				this->Join();
 			}
-			cond.notify_one();
-			this->Join();
 		}
 
 	protected:
