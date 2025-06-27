@@ -10,8 +10,7 @@
 
 namespace Util {
 
-	class Transform {
-	public:
+	struct Transform {
 		Vector3<double> position;
 		Rotation rotation;
 		Vector3<double> scale;

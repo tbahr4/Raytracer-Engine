@@ -54,7 +54,7 @@ namespace Renderer {
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint32_t color) {
 		if (x >= width || y >= height) {
-			LOG_WARNING("Attempted to set pixel outside the boundaries of frame");
+			Util::Log::Warn("Attempted to set pixel outside the boundaries of frame");
 			return;
 		}
 
@@ -69,7 +69,7 @@ namespace Renderer {
 
 	uint32_t Frame::GetPixel(int x, int y) {
 		if (x >= width || y >= height) {
-			LOG_WARNING("Attempted to get pixel outside the boundaries of frame");
+			Util::Log::Warn("Attempted to get pixel outside the boundaries of frame");
 			return 0;
 		}
 

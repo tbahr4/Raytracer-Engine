@@ -73,7 +73,7 @@ namespace InputMgr {
 				break;
 
 			default:
-				LOG_ERROR("InputMgr: Unhandled action found in mapped action list");
+				Util::Log::Error("InputMgr: Unhandled action found in mapped action list");
 				break;
 			}
 		}		

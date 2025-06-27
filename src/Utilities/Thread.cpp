@@ -30,7 +30,7 @@ namespace Util {
 		//! 
 		void Thread::Start(void* args) {
 			if (isStarted) {
-				LOG_WARNING(name + ": Thread was requested to start when already active");
+				Util::Log::Warn(name + ": Thread was requested to start when already active");
 				return;
 			}
 
@@ -67,12 +67,12 @@ namespace Util {
 		//! 
 		void Thread::Runner() {
 			if (!Init()) {
-				LOG_ERROR(name + ": Thread failed to initialize");
+				Util::Log::Error(name + ": Thread failed to initialize");
 				return;
 			}
 
 			int retVal = Run(args);
-			LOG_INFO(name + ": Thread exited with code " + std::to_string(retVal));
+			Util::Log::Debug(name + ": Thread exited with code " + std::to_string(retVal));
 		}
 
 }; // namespace Util

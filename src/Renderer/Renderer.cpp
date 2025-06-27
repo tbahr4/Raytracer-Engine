@@ -24,11 +24,11 @@ namespace Renderer {
 		bool success = this->display.Init();
 
 		if (!success) {
-			LOG_ERROR("Renderer initialization failed");
+			Util::Log::Error("Renderer initialization failed");
 			return false;
 		}
 
-		LOG_INFO("Renderer initialized successfully");
+		Util::Log::Info("Renderer initialized successfully");
 		this->isInitialized = true;
 		return true;
 	}
@@ -106,7 +106,7 @@ namespace Renderer {
 		double pctDiff = 1 - pctRefl - pctRefr;
 
 		if (pctDiff < 0) {
-			LOG_ERROR("Renderer: Invalid object properties. Sum of reflectivity and transparency must be at most 1.0");
+			Util::Log::Error("Renderer: Invalid object properties. Sum of reflectivity and transparency must be at most 1.0");
 			return { 0,0,0 };
 		}
 

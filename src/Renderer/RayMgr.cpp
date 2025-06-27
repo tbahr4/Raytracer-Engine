@@ -33,7 +33,7 @@ namespace Renderer {
 				case World::ShapeType::CUBE:
 				case World::ShapeType::RECTANGLE:
 				default:
-					LOG_ERROR("GetFirstCollision: Unimplemented object shape defined for collision check");
+					Util::Log::Error("GetFirstCollision: Unimplemented object shape defined for collision check");
 					return nullptr;
 
 				case World::ShapeType::SPHERE:
@@ -107,7 +107,7 @@ namespace Renderer {
 			case World::ShapeType::CUBE:
 			case World::ShapeType::RECTANGLE:
 			default:
-				LOG_ERROR("GetFirstCollision: Unimplemented object shape defined for collision check");
+				Util::Log::Error("GetFirstCollision: Unimplemented object shape defined for collision check");
 				return nullptr;
 
 			case World::ShapeType::SPHERE:
@@ -172,7 +172,7 @@ namespace Renderer {
 		//! 
 		std::vector<RayMgr::Ray> RayMgr::GetDiffuseRays(const RayMgr::CollisionInfo* colInfo) {
 			if (colInfo == nullptr) {
-				LOG_ERROR("GetDiffuseRays: Cannot create diffuse rays from null collision");
+				Util::Log::Error("GetDiffuseRays: Cannot create diffuse rays from null collision");
 				return std::vector<RayMgr::Ray>();
 			}
 
@@ -189,7 +189,7 @@ namespace Renderer {
 
 		RayMgr::Ray RayMgr::GetReflectionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
 			if (colInfo == nullptr) {
-				LOG_ERROR("GetReflectionRay: Cannot create reflection ray from null collision");
+				Util::Log::Error("GetReflectionRay: Cannot create reflection ray from null collision");
 				return RayMgr::Ray();
 			}
 
@@ -202,7 +202,7 @@ namespace Renderer {
 
 		RayMgr::Ray RayMgr::GetRefractionRay(const RayMgr::Ray& ray, const RayMgr::CollisionInfo* colInfo) {
 			if (colInfo == nullptr) {
-				LOG_ERROR("GetRefractionRay: Cannot create refraction ray from null collision");
+				Util::Log::Error("GetRefractionRay: Cannot create refraction ray from null collision");
 				return RayMgr::Ray();
 			}
 
@@ -220,9 +220,10 @@ namespace Renderer {
 			double sinT2 = eta * eta * (1.0 - cosI * cosI);	// Sin^2(theta_t)
 
 			//! Assumption: Entry always occurs from air -> TIR can never occur
+			// TODO: Remove me
 			//if (sinT2 > 1) {
 			//	// Total internal reflection - No refraction occurs
-			//	LOG_WARNING("GetRefractionRay: Unimplemented reflection");
+			//	Util::Log::WarnING("GetRefractionRay: Unimplemented reflection");
 			//	return RayMgr::Ray(); // TODO: Handle internal reflection
 			//}
 
@@ -239,7 +240,7 @@ namespace Renderer {
 
 			//if (sinT2 > 1) {
 			//	// Total internal reflection - No refraction occurs
-			//	LOG_WARNING("GetRefractionRay: Unimplemented reflection");
+			//	Util::Log::WarnING("GetRefractionRay: Unimplemented reflection");
 			//	return RayMgr::Ray(); // TODO: Handle internal reflection
 			//}
 
@@ -259,7 +260,7 @@ namespace Renderer {
 					std::unique_ptr<CollisionInfo> internalCol = GetInternalCollision(*(colInfo->object), internalRay);
 					
 					if (internalCol == nullptr) {
-						LOG_ERROR("GetRefractionRay: Internal collision not found");
+						Util::Log::Error("GetRefractionRay: Internal collision not found");
 						return RayMgr::Ray();	// FIXME: Need better return handling
 					}
 
@@ -286,7 +287,7 @@ namespace Renderer {
 
 					rayDepth++;
 					if (rayDepth == maxTIRRayDepth) {
-						LOG_WARNING("GetRefractionRay: Reached max TIR depth");
+						Util::Log::Warn("GetRefractionRay: Reached max TIR depth");
 						return RayMgr::Ray();	// FIXME: Need to flag as complete and add to total ray depth
 					}
 				}

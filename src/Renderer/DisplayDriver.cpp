@@ -32,8 +32,8 @@ namespace Renderer {
 	bool DisplayDriver::Init() {
 		//! Initialize SDL
 		if (!SDL_Init(SDL_INIT_VIDEO)) {
-			LOG_ERROR("SDL_Init Error: " + (std::string)SDL_GetError())
-				return false;
+			Util::Log::Error("SDL_Init Error: " + (std::string)SDL_GetError());
+			return false;
 		}
 
 		//! Initialize window
@@ -51,11 +51,11 @@ namespace Renderer {
 		//! Initialize texture for pixel buffer
 		this->texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_STREAMING, this->windowWidth, this->windowHeight);
 		if (!texture) {
-			LOG_ERROR("SDL_CreateTexture Error: " + (std::string)SDL_GetError());
+			Util::Log::Error("SDL_CreateTexture Error: " + (std::string)SDL_GetError());
 			return false;
 		}
 
-		LOG_INFO("Display driver initialized successfully");
+		Util::Log::Info("Display driver initialized successfully");
 		this->isInitialized = true;
 		return true;
 	}
