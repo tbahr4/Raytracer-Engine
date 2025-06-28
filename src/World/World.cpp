@@ -21,7 +21,7 @@ namespace World {
 	//! 
 	Object* World::GetObject(int index) {
 		if (index >= GetObjectCount()) {
-			LOG_ERROR("Attempted to retrieve world object using invalid index");
+			Util::Log::Error("Attempted to retrieve world object using invalid index");
 			return nullptr;
 		}
 
@@ -33,7 +33,7 @@ namespace World {
 	//! 
 	const Object* World::GetObject(int index) const {
 		if (index >= GetObjectCount()) {
-			LOG_ERROR("Attempted to retrieve world object using invalid index");
+			Util::Log::Error("Attempted to retrieve world object using invalid index");
 			return nullptr;
 		}
 

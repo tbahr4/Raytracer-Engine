@@ -10,8 +10,7 @@
 
 namespace Util {
 
-	class Rotation {
-	public:
+	struct Rotation {
 		double yaw, pitch, roll;
 		Rotation(double yaw, double pitch, double roll) : yaw(yaw), pitch(pitch), roll(roll) {}
 	};

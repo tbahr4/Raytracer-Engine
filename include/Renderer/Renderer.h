@@ -44,13 +44,17 @@ namespace Renderer {
 		//! Interface functions
 		void ProduceWorldFrame(std::shared_ptr<Player::Player> player);
 		void DisplayFrame();
+		std::vector<RayMgr::Ray> GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight);
+		Util::Vector3<double> CalcTotalLight(const RayMgr::Ray& ray) const;
+		Frame* GetRawFrame();
+
+		//! Accessors
+		int GetWindowWidth() const;
+		int GetWindowHeight() const;
 
 	private:
-		std::vector<RayMgr::Ray> GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight);
-		Util::Vector3<double> CalcTotalLight(const RayMgr::Ray& ray, int maxDepth);
-
 		//! Helper functions
-		Util::Vector3<double> _CalcTotalLightHelper(const RayMgr::Ray& ray, int depth, int maxDepth);
+		Util::Vector3<double> _CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const;
 	};
 
 }; // namespace Renderer
