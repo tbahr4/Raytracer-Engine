@@ -211,4 +211,18 @@ namespace Renderer {
 		return rays;
 	}
 
+	//! GetWindowWidth
+	//! Returns the width of the window in pixels
+	//! 
+	int Renderer::GetWindowWidth() const {
+		return window.GetWidth();
+	}
+
+	//! GetWindowHeight
+	//! Returns the height of the window in pixels
+	//! 
+	int Renderer::GetWindowHeight() const {
+		return window.GetHeight();
+	}
+
 }; // namespace Renderer

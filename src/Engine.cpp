@@ -4,6 +4,9 @@
 //! 
 #include "Engine.h"
 
+// TODO: Make this configurable
+//#define SINGLE_THREADED
+
 
 
 namespace Engine {
@@ -72,10 +75,12 @@ namespace Engine {
 			return false;
 		}
 
+#ifndef SINGLE_THREADED
 		/* ----------------------------------------------------------------
 		* Initialize render pool
 		* ---------------------------------------------------------------- */
 		renderPool.Init();
+#endif
 
 		isActive = true;
 		return true;
@@ -104,10 +109,33 @@ namespace Engine {
 			return false;
 		}
 
-		//! Generate world frame
-		//renderer->...
+		/* ----------------------------------------------------------------
+		* Generate world frame
+		* ---------------------------------------------------------------- */
+#ifdef SINGLE_THREADED
 		renderer->ProduceWorldFrame(player);
 		renderer->DisplayFrame();
+#else
+		//! Get rays to trace
+		std::vector<Renderer::RayMgr::Ray> rays = renderer->GenerateRays(player.get()->GetCamera(), renderer->GetWindowWidth(), renderer->GetWindowHeight());
+
+		//! Split into rendering tasks
+		constexpr int nRaysPerTask = 10000;
+		int nTasks = std::ceil(rays.size() / (double)nRaysPerTask);
+		std::vector<Util::RenderTask> tasks(nTasks); // TODO: Do not create space every frame
+
+		for (int taskI = 0; taskI < tasks.size(); taskI++) {
+			tasks[taskI].endIdx = taskI * nRaysPerTask;
+			tasks[taskI].startIdx = std::min(tasks[taskI].startIdx + nRaysPerTask, (int)rays.size());
+			tasks[taskI].rays = &rays;
+		}
+
+		//! Add tasks to render pool
+		renderPool.AddTasks(tasks);
+
+		renderPool.WaitIdle();
+#endif
+
 
 		return true;
 	}

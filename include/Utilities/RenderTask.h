@@ -14,12 +14,19 @@ namespace Util {
 
 	class RenderTask : public WorkTask {
 	public:
-		int rayVecOffset;
-		std::vector<Renderer::RayMgr::Ray> rays;
+		int startIdx, endIdx;
+		const std::vector<Renderer::RayMgr::Ray>* rays;
 
-		RenderTask(int rayVecOffset, std::vector<Renderer::RayMgr::Ray> rays)
-			: rayVecOffset(rayVecOffset)
-			, rays(rays)
+		RenderTask() 
+			: rays()
+			, startIdx(-1)
+			, endIdx(-1)
+		{}
+
+		RenderTask(std::vector<Renderer::RayMgr::Ray>* rays, int startIdx, int endIdx)
+			: rays(rays)
+			, startIdx(startIdx)
+			, endIdx(endIdx)
 		{}
 	};
 
