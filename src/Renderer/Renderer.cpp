@@ -55,7 +55,7 @@ namespace Renderer {
 		 * ---------------------------------------------------------------- */
 		for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
 			RayMgr::Ray& ray = rays[rayIdx];
-			Util::Vector3 color = CalcTotalLight(ray, maxRayDepth);
+			Util::Vector3 color = CalcTotalLight(ray);
 
 			// Set the window pixel
 			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
@@ -73,20 +73,27 @@ namespace Renderer {
 		display.PollEvents();
 		inputMgr->ProcessActivityState();	// Process valid activities
 		display.RenderFrame(this->window);
-		SDL_Delay(1 / 60);
+		SDL_Delay(1 / 360);
 	}
 
 	//! CalcTotalLight
 	//! Returns the total resultant light provided by the given ray trace
 	//! 
-	Util::Vector3<double> Renderer::CalcTotalLight(const RayMgr::Ray& ray, int maxRayDepth) {
-		return _CalcTotalLightHelper(ray, 0, maxRayDepth);
+	Util::Vector3<double> Renderer::CalcTotalLight(const RayMgr::Ray& ray) const {
+		return _CalcTotalLightHelper(ray, 0);
+	}
+
+	//! GetRawFrame
+	//! Returns the raw window frame for external modification
+	//! 
+	Frame* Renderer::GetRawFrame() {
+		return &window;
 	}
 
 	//! _CalcTotalLightHelper
 	//! Helper function for CalcTotalLight
 	//! 
-	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth, int maxRayDepth) {
+	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const {
 		//! Base case
 		if (depth > maxRayDepth) {
 			return { 0,0,0 };	// No light contribution
@@ -158,8 +165,8 @@ namespace Renderer {
 		}
 		
 		//! Reflection and refraction
-		Util::Vector3<double> colRefl = _CalcTotalLightHelper(rayRefl, depth + 1, maxRayDepth);
-		Util::Vector3<double> colRefr = _CalcTotalLightHelper(rayRefr, depth + 1, maxRayDepth);
+		Util::Vector3<double> colRefl = _CalcTotalLightHelper(rayRefl, depth + 1);
+		Util::Vector3<double> colRefr = _CalcTotalLightHelper(rayRefr, depth + 1);
 		
 		/* ----------------------------------------------------------------
 		 * Get total light

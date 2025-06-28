@@ -61,8 +61,6 @@ namespace Util {
 						Util::Log::Error(name + "_" + std::to_string(threadIdx) + ": Failed to accomplish task");
 					}
 
-					Util::Log::Info("Task complete callback received");
-
 					std::lock_guard<std::mutex> lock(taskQueueMutex);
 
 					if (!taskQueue.empty()) {

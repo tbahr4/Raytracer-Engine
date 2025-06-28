@@ -83,7 +83,6 @@ namespace Util {
 
 					lastTaskID.store(task->GetUID());
 					Util::Log::Debug(GetName() + ": Thread received new task (ID: " + std::to_string(task->GetUID()) + ")");
-					Util::Log::Info("Thread running new task...");
 				}
 
 				//! Handle latest task

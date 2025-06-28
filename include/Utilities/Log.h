@@ -21,7 +21,7 @@ namespace Util {
 		};
 
 		static std::mutex mutex;
-		static constexpr LOG_LEVEL logLevel = LOG_LEVEL::INFO;
+		static constexpr LOG_LEVEL logLevel = LOG_LEVEL::WARNING;
 
 	public:
 		Log() = delete;
