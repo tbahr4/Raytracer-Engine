@@ -1,2 +1,2 @@
 # Raytracer-Engine
-A simple CPU-based ray tracing engine using reflection, refraction, and diffuse lighting
+A simple CPU-based ray tracing engine using specular reflection, refraction, and diffuse lighting
