@@ -15,6 +15,8 @@
 
 namespace InputMgr {
 
+	constexpr double mouseSensitivity = .0025;	// TODO: Make configurable
+
 	class InputMgr {
 	private:
 		//! Actions
@@ -24,7 +26,9 @@ namespace InputMgr {
 			MOVE_RIGHT,
 			MOVE_LEFT,
 			MOVE_UP,
-			MOVE_DOWN
+			MOVE_DOWN,
+			ROLL_RIGHT,
+			ROLL_LEFT
 		};
 
 		//! Keybinds
@@ -34,7 +38,9 @@ namespace InputMgr {
 			{SDLK_D, INPUT_ACTION::MOVE_RIGHT},
 			{SDLK_A, INPUT_ACTION::MOVE_LEFT},
 			{SDLK_SPACE, INPUT_ACTION::MOVE_UP},
-			{SDLK_LSHIFT, INPUT_ACTION::MOVE_DOWN}
+			{SDLK_LSHIFT, INPUT_ACTION::MOVE_DOWN},
+			{SDLK_E, INPUT_ACTION::ROLL_RIGHT},
+			{SDLK_Q, INPUT_ACTION::ROLL_LEFT}
 		};
 
 	private:
@@ -42,6 +48,7 @@ namespace InputMgr {
 		std::shared_ptr<World::World> world;
 
 		std::unordered_set<INPUT_ACTION> activeActions;	// Active keypresses/actions
+		bool isWindowFocused;
 
 	public:
 		InputMgr(std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world);

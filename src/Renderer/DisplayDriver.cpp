@@ -60,6 +60,11 @@ namespace Renderer {
 			return false;
 		}
 
+		//! Additional settings
+		SDL_CaptureMouse(true);
+		SDL_SetWindowRelativeMouseMode(window, true);
+
+
 		Util::Log::Info("Display driver initialized successfully");
 		this->isInitialized = true;
 		return true;

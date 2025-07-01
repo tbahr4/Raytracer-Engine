@@ -43,25 +43,25 @@ namespace Engine {
 		* ---------------------------------------------------------------- */
 		// TODO: TEMP; Move to configuration
 		World::Object obj(MaterialMgr::MATERIAL_ID::TEST_MAT,
-			Util::Transform(Util::Vector3<double>(0, 0, 5),
+			Util::Transform(Util::Vector3<double>(0, 0, -5),
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj));
 
 		World::Object obj2(MaterialMgr::MATERIAL_ID::TEST_MAT_2,
-			Util::Transform(Util::Vector3<double>(3, 3, 5),
+			Util::Transform(Util::Vector3<double>(3, 3, -5),
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj2));
 
 		World::Object obj3(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
-			Util::Transform(Util::Vector3<double>(-3, 3, 5),
+			Util::Transform(Util::Vector3<double>(-3, 3, -5),
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj3));
 
 		World::Object obj4(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
-			Util::Transform(Util::Vector3<double>(0, 0, 8),
+			Util::Transform(Util::Vector3<double>(0, 0, -8),
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj4));

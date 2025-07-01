@@ -210,7 +210,7 @@ namespace Renderer {
 
 				//! Construct the ray
 				rays[rayIdx].origin = camera->GetPosition();
-				rays[rayIdx].direction = (x * camRight + y * camUp + camForward).Normalized();
+				rays[rayIdx].direction = (x * camRight - y * camUp + camForward).Normalized();
 				rayIdx++;
 			}
 		}

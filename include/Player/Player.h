@@ -13,7 +13,7 @@ namespace Player {
 	class Player {
 	private:
 		//! Properties
-		const double movementSpeed = 0.1;
+		const double movementSpeed = 0.2;
 
 		//! Component references
 		std::unique_ptr<Camera> camera;

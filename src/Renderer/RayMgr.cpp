@@ -177,7 +177,7 @@ namespace Renderer {
 			}
 
 			// FIXME: Make this work in a loop of all lights
-			const Util::Vector3<double> lightPos = { 0,5,3 };
+			const Util::Vector3<double> lightPos = { 0,5,-3 };
 			RayMgr::Ray diffuseRay;
 			diffuseRay.origin = colInfo->position;
 			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
