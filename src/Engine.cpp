@@ -120,7 +120,7 @@ namespace Engine {
 		std::vector<Renderer::RayMgr::Ray> rays = renderer->GenerateRays(player.get()->GetCamera(), renderer->GetWindowWidth(), renderer->GetWindowHeight());
 
 		//! Split into rendering tasks
-		constexpr int nRaysPerTask = 1000;
+		constexpr int nRaysPerTask = 1000;	// TODO: Configurable
 		int nTasks = std::ceil(rays.size() / (double)nRaysPerTask);
 		std::vector<Util::RenderTask> tasks(nTasks); // TODO: Do not create space every frame
 

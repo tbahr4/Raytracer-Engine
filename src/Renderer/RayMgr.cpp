@@ -210,22 +210,14 @@ namespace Renderer {
 			/* ----------------------------------------------------------------
 			* Apply refraction via Snell's law
 			* ---------------------------------------------------------------- */
-			const double n1 = 1;		// TODO: Add to material mgr?
-			const double n2 = 1.1;		// TODO: Add to material
+			const double n1 = 1;	// Refractive index in air
+			double n2 = colInfo->object->GetMaterial().refractiveIdx;
 
 			//! Determine refracted entry vector
 			//! 
 			double eta = n1 / n2;	// Refractive index ratio
 			double cosI = ray.direction.Reversed().Dot(colInfo->normal);
 			double sinT2 = eta * eta * (1.0 - cosI * cosI);	// Sin^2(theta_t)
-
-			//! Assumption: Entry always occurs from air -> TIR can never occur
-			// TODO: Remove me
-			//if (sinT2 > 1) {
-			//	// Total internal reflection - No refraction occurs
-			//	Util::Log::WarnING("GetRefractionRay: Unimplemented reflection");
-			//	return RayMgr::Ray(); // TODO: Handle internal reflection
-			//}
 
 			double cosT = std::sqrt(1 - sinT2);	// Cosine of transmitted angle
 
