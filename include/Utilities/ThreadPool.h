@@ -85,7 +85,7 @@ namespace Util {
 			idleThreadIdx.push(threadIdx);
 
 			//! Start the thread
-			threads[threadIdx]->Start(nullptr);	// TODO: Hide arguments from start()
+			threads[threadIdx]->Start(nullptr);
 			Util::Log::Debug(threads[threadIdx]->GetName() + ": Initialized thread");
 		}
 

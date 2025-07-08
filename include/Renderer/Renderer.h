@@ -19,7 +19,6 @@ namespace Renderer {
 
 	class Renderer {
 	private:
-		//std::queue<std::pair<Util::Vector2<double>, Frame*>> renderQueue; // TODO: This should be a processing queue for calling functions, not creating a frame to apply
 		Frame window;
 		DisplayDriver display;
 		std::shared_ptr<World::World> world;
