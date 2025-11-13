@@ -36,7 +36,7 @@ namespace Util {
 		WorkerThread(std::string name, std::function<void(WorkerThread*, bool)> taskComplete_Callback)
 			: Thread(name)
 			, isStopped(false)
-			, lastTaskID(-1)	// TODO: Should probably make this safer
+			, lastTaskID(-1)	
 			, taskComplete_Callback(taskComplete_Callback)
 			, awaitingTask(true)
 		{}

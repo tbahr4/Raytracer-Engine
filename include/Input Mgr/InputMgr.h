@@ -15,8 +15,6 @@
 
 namespace InputMgr {
 
-	constexpr double mouseSensitivity = .0025;	// TODO: Make configurable
-
 	class InputMgr {
 	private:
 		//! Actions

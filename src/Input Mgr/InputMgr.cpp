@@ -3,6 +3,8 @@
 //! Manages user input events
 //! 
 #include "InputMgr.h"
+#include "Engine.h"
+using namespace Engine;
 
 
 
@@ -43,8 +45,8 @@ namespace InputMgr {
 			}
 
 			Util::Rotation& rotation = player->GetCamera()->GetRotation();
-			rotation.yaw = Util::Wrap(rotation.yaw - event.motion.xrel * mouseSensitivity, 0, 2*Util::PI);
-			rotation.pitch = Util::Clamp(rotation.pitch - event.motion.yrel * mouseSensitivity, -Util::PI/2, Util::PI/2);
+			rotation.yaw = Util::Wrap(rotation.yaw - event.motion.xrel * Config::MOUSE_SENSITIVITY, 0, 2*Util::PI);
+			rotation.pitch = Util::Clamp(rotation.pitch - event.motion.yrel * Config::MOUSE_SENSITIVITY, -Util::PI/2, Util::PI/2);
 			return;
 		}
 

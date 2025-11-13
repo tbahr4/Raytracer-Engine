@@ -28,11 +28,11 @@ namespace Renderer {
 		bool isInitialized = false;
 
 		//! Properties
-		const int maxRayDepth = 1;	// TODO: Configurable
+		const int maxRayDepth;
 
 	public:
 		//! Constructors
-		Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr);
+		Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth);
 
 		//! Initialization
 		bool Init();

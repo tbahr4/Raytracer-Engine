@@ -10,11 +10,12 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth)
 	: window("WindowFrame", windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
 	, inputMgr(inputMgr)
+	, maxRayDepth(maxRayDepth)
 	{}
 
 	//! Init

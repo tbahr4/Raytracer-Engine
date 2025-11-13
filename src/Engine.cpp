@@ -13,10 +13,10 @@ namespace Engine {
 
 	//! Constructor
 	//! 
-	Engine::Engine(int nRenderThreads)
+	Engine::Engine()
 		: isActive(false)
-		, nRenderThreads(nRenderThreads)
-		, renderPool("RenderPool", nRenderThreads)
+		, renderPool("RenderPool", Config::NUM_RENDER_THREADS)
+		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT) / (double)Config::NUM_RAYS_PER_TASK))
 	{}
 
 	//! Destructor
@@ -33,10 +33,10 @@ namespace Engine {
 		* Initialize components
 		* ---------------------------------------------------------------- */
 		world = std::make_shared<World::World>();
-		camera = std::make_unique<Player::Camera>(startPos, startRot, fov);
+		camera = std::make_unique<Player::Camera>(Config::START_POS, Config::START_ROT, Config::FOV);
 		player = std::make_shared<Player::Player>(std::move(camera));
 		inputMgr = std::make_unique<InputMgr::InputMgr>(player, world);
-		renderer = std::make_unique<Renderer::Renderer>(windowTitle, screenWidth, screenHeight, player, world, inputMgr);
+		renderer = std::make_unique<Renderer::Renderer>(Config::WINDOW_TITLE, Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, player, world, inputMgr, Config::MAX_RAY_DEPTH);
 
 		/* ----------------------------------------------------------------
 		* Add world objects
@@ -120,13 +120,12 @@ namespace Engine {
 		std::vector<Renderer::RayMgr::Ray> rays = renderer->GenerateRays(player.get()->GetCamera(), renderer->GetWindowWidth(), renderer->GetWindowHeight());
 
 		//! Split into rendering tasks
-		constexpr int nRaysPerTask = 1000;	// TODO: Configurable
-		int nTasks = std::ceil(rays.size() / (double)nRaysPerTask);
-		std::vector<Util::RenderTask> tasks(nTasks); // TODO: Do not create space every frame
+		int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
+		assert(nTasks == tasks.size(), "Produced invalid amount of rendering tasks");
 
 		for (int taskI = 0; taskI < tasks.size(); taskI++) {
-			tasks[taskI].startIdx = taskI * nRaysPerTask;
-			tasks[taskI].endIdx = std::min(tasks[taskI].startIdx + nRaysPerTask, (int)rays.size());
+			tasks[taskI].startIdx = taskI * Config::NUM_RAYS_PER_TASK;
+			tasks[taskI].endIdx = std::min(tasks[taskI].startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
 			tasks[taskI].rays = &rays;
 			tasks[taskI].renderer = renderer.get();
 		}
