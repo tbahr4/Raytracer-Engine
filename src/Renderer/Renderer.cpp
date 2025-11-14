@@ -10,12 +10,13 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth, int resDownScale)
 	: window("WindowFrame", windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
 	, inputMgr(inputMgr)
 	, maxRayDepth(maxRayDepth)
+	, resDownScale(resDownScale)
 	{}
 
 	//! Init
@@ -48,7 +49,9 @@ namespace Renderer {
 		/* ----------------------------------------------------------------
 		 * Generate rays from given screen frame
 		 * ---------------------------------------------------------------- */
-		std::vector<RayMgr::Ray> rays = GenerateRays(player->GetCamera(), display.GetWidth(), display.GetHeight());
+		int displayWidth = display.GetWidth();
+		int displayHeight = display.GetHeight();
+		std::vector<RayMgr::Ray> rays = GenerateRays(player->GetCamera(), displayWidth, displayHeight);
 
 
 		/* ----------------------------------------------------------------
@@ -58,11 +61,17 @@ namespace Renderer {
 			RayMgr::Ray& ray = rays[rayIdx];
 			Util::Vector3 color = CalcTotalLight(ray);
 
-			// Set the window pixel
+			//! Set the window pixel
 			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
-			int px = rayIdx % display.GetWidth();
-			int py = rayIdx / display.GetWidth();
-			this->window.SetPixel(px, py, colorAdj);
+
+			int pxBase = (rayIdx * resDownScale) % displayWidth;
+			int pyBase = (rayIdx * resDownScale) / (displayWidth / resDownScale);
+
+			for (int px = pxBase; px < pxBase + resDownScale && px < displayWidth; px++) { // Loop for downscaling
+				for (int py = pyBase; py < pyBase + resDownScale && py < displayHeight; py++) {
+					this->window.SetPixel(px, py, colorAdj);
+				}
+			}
 		}
 	}
 
@@ -200,18 +209,21 @@ namespace Renderer {
 		/* ----------------------------------------------------------------
 		 * Generate rays
 		 * ---------------------------------------------------------------- */
-		std::vector<RayMgr::Ray> rays(frameWidth * frameHeight);
+		double raysX = std::ceil(frameWidth / resDownScale);
+		double raysY = std::ceil(frameHeight / resDownScale);
+
+		std::vector<RayMgr::Ray> rays(raysX * raysY);
 
 		double halfWidth = tan((camera->GetFOV() * Util::PI / 180) / 2);
 		double aspectRatio = frameWidth / frameHeight;
 		double halfHeight = halfWidth / aspectRatio;
 
 		int rayIdx = 0;
-		for (int py = 0; py < frameHeight; py++) {
-			for (int px = 0; px < frameWidth; px++) {
+		for (int py = 0; py < raysY; py++) {
+			for (int px = 0; px < raysX; px++) {
 				//! Normalize pixels to UV [-1,1]
-				double u = ((px + 0.5) / frameWidth) * 2 - 1;
-				double v = ((py + 0.5) / frameHeight) * 2 - 1;
+				double u = (((px * resDownScale) + 0.5) / frameWidth) * 2 - 1;
+				double v = (((py * resDownScale) + 0.5) / frameHeight) * 2 - 1;
 
 				//! Scale UV by half the screen size
 				double x = u * halfWidth;

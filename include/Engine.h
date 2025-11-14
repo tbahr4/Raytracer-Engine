@@ -19,15 +19,15 @@ namespace Engine {
 	namespace Config {
 		constexpr char* WINDOW_TITLE = "Raytracer";
 		constexpr int NUM_RENDER_THREADS = 8;
-		constexpr int SCREEN_WIDTH = 1280*2;
-		constexpr int SCREEN_HEIGHT = 960*2;
+		constexpr int SCREEN_WIDTH = 1920*2;
+		constexpr int SCREEN_HEIGHT = 1080*2;
 		constexpr double FOV = 60;
 		const Util::Vector3<double> START_POS = Util::Vector3<double>(0, 0, 0);
 		const Util::Rotation START_ROT = Util::Rotation(0, 0, 0);
 		constexpr double MOUSE_SENSITIVITY = .0025;
-		constexpr int MAX_RAY_DEPTH = 1; // Maximum number of ray bounces to render
-		constexpr int NUM_RAYS_PER_TASK = 100000; // Number of ray traces to be packaged per worker thread
-		constexpr int RESOLUTION_DOWN_SCALE = 2; // Scales down the ray count (e.g., NxN pixels per ray)
+		constexpr int MAX_RAY_DEPTH = 15; // Maximum number of ray bounces to render
+		constexpr int NUM_RAYS_PER_TASK = 1000; // Number of ray traces to be packaged per worker thread
+		constexpr int RESOLUTION_DOWN_SCALE = 4; // Scales down the ray count (e.g., NxN pixels per ray)
 	}
 
 	class Engine {

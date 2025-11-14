@@ -15,7 +15,7 @@ namespace Engine {
 	//! 
 	Engine::Engine()
 		: isActive(false)
-		, renderPool("RenderPool", Config::NUM_RENDER_THREADS)
+		, renderPool("RenderPool", Config::NUM_RENDER_THREADS, Config::RESOLUTION_DOWN_SCALE)
 		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT) / (double)Config::NUM_RAYS_PER_TASK))
 	{
 		for (int i = 0; i < tasks.size(); i++) {
@@ -40,7 +40,7 @@ namespace Engine {
 		camera = std::make_unique<Player::Camera>(Config::START_POS, Config::START_ROT, Config::FOV);
 		player = std::make_shared<Player::Player>(std::move(camera));
 		inputMgr = std::make_unique<InputMgr::InputMgr>(player, world);
-		renderer = std::make_unique<Renderer::Renderer>(Config::WINDOW_TITLE, Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, player, world, inputMgr, Config::MAX_RAY_DEPTH);
+		renderer = std::make_unique<Renderer::Renderer>(Config::WINDOW_TITLE, Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, player, world, inputMgr, Config::MAX_RAY_DEPTH, Config::RESOLUTION_DOWN_SCALE);
 
 		/* ----------------------------------------------------------------
 		* Add world objects

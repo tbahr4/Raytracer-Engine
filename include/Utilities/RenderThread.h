@@ -12,8 +12,11 @@
 namespace Util {
 
 	class RenderThread : public WorkerThread<RenderTask> {
+	private:
+		int resDownScale;
+
 	public:
-		RenderThread(std::string name, std::function<void(WorkerThread*, bool)> taskComplete_Callback);
+		RenderThread(std::string name, int resDownScale, std::function<void(WorkerThread*, bool)> taskComplete_Callback);
 
 	protected:
 		bool Init() override;

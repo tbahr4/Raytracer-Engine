@@ -28,14 +28,16 @@ namespace Util {
 		bool isActive;
 		std::mutex taskQueueMutex, idlePoolMutex;
 		std::condition_variable idleCond;
+		const int resDownScale;
 
 	public:
 		//! Constructors
 		//! 
-		ThreadPool(std::string name, int nThreads)
+		ThreadPool(std::string name, int nThreads, int resDownScale)
 			: name(name)
 			, nThreads(nThreads)
 			, isActive(false)
+			, resDownScale(resDownScale)
 		{}
 
 		//! Interface functions
@@ -56,7 +58,7 @@ namespace Util {
 		//! Instantiate threads
 		for (int threadIdx = 0; threadIdx < nThreads; threadIdx++) {
 			threads.push_back(std::make_unique<WorkerThreadType>(
-				"RenderThread_" + std::to_string(threadIdx), [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
+				"RenderThread_" + std::to_string(threadIdx), resDownScale, [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
 					if (!success) {
 						Util::Log::Error(name + "_" + std::to_string(threadIdx) + ": Failed to accomplish task");
 					}

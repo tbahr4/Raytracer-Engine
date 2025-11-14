@@ -29,10 +29,11 @@ namespace Renderer {
 
 		//! Properties
 		const int maxRayDepth;
+		const int resDownScale; // Downscaling factor of resolution
 
 	public:
 		//! Constructors
-		Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth);
+		Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth, int resDownScale);
 
 		//! Initialization
 		bool Init();
