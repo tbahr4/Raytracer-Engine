@@ -17,7 +17,11 @@ namespace Engine {
 		: isActive(false)
 		, renderPool("RenderPool", Config::NUM_RENDER_THREADS)
 		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT) / (double)Config::NUM_RAYS_PER_TASK))
-	{}
+	{
+		for (int i = 0; i < tasks.size(); i++) {
+			tasks[i] = std::make_shared<Util::RenderTask>();
+		}
+	}
 
 	//! Destructor
 	//! 
@@ -121,16 +125,18 @@ namespace Engine {
 
 		//! Split into rendering tasks
 		int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
-		assert(nTasks == tasks.size(), "Produced invalid amount of rendering tasks");
+		assert(nTasks == tasks.size());
 
 		for (int taskI = 0; taskI < tasks.size(); taskI++) {
-			tasks[taskI].startIdx = taskI * Config::NUM_RAYS_PER_TASK;
-			tasks[taskI].endIdx = std::min(tasks[taskI].startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
-			tasks[taskI].rays = &rays;
-			tasks[taskI].renderer = renderer.get();
+			tasks[taskI]->GetNewUID();
+			tasks[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
+			tasks[taskI]->endIdx = std::min(tasks[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
+			tasks[taskI]->rays = &rays;
+			tasks[taskI]->renderer = renderer.get();
 		}
 
 		//! Add tasks to render pool
+		Util::Log::Debug("Adding " + std::to_string(tasks.size()) + " tasks");
 		renderPool.AddTasks(tasks);
 
 		renderPool.WaitIdle();

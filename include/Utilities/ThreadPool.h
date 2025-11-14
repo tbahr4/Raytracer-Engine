@@ -21,7 +21,7 @@ namespace Util {
 
 	private:
 		int nThreads;
-		std::queue<TaskType> taskQueue;
+		std::queue<TaskType*> taskQueue;
 		std::vector<std::unique_ptr<WorkerThreadType>> threads; 
 		std::queue<int> idleThreadIdx;	// Shared
 		std::string name;
@@ -41,8 +41,8 @@ namespace Util {
 		//! Interface functions
 		//! 
 		void Init();
-		void AddTasks(std::vector<TaskType>& tasks);
-		void AddTask(TaskType& task);
+		void AddTasks(std::vector<std::shared_ptr<TaskType>>& tasks);
+		void AddTask(TaskType* task);
 		void WaitIdle();
 		void Shutdown();
 		
@@ -56,7 +56,7 @@ namespace Util {
 		//! Instantiate threads
 		for (int threadIdx = 0; threadIdx < nThreads; threadIdx++) {
 			threads.push_back(std::make_unique<WorkerThreadType>(
-				name + "_" + std::to_string(threadIdx), [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
+				"RenderThread_" + std::to_string(threadIdx), [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
 					if (!success) {
 						Util::Log::Error(name + "_" + std::to_string(threadIdx) + ": Failed to accomplish task");
 					}
@@ -65,9 +65,9 @@ namespace Util {
 
 					if (!taskQueue.empty()) {
 						//! Acquire new tasking
-						TaskType task = std::move(taskQueue.front());
+						TaskType* task = taskQueue.front();
 						taskQueue.pop();
-						thread->SetTask(std::move(task));
+						thread->SetTask(task);
 					}
 					else {
 						//! Thread is now idle
@@ -97,7 +97,7 @@ namespace Util {
 	//! Delegates a set of tasks to be processed by the thread pool
 	//! 
 	template <class WorkerThreadType>
-	void ThreadPool<WorkerThreadType>::AddTasks(std::vector<TaskType>& tasks) {
+	void ThreadPool<WorkerThreadType>::AddTasks(std::vector<std::shared_ptr<TaskType>>& tasks) {
 		if (!isActive) {
 			Util::Log::Warn("Attempted to add tasks on an inactive thread pool");
 			return;
@@ -114,14 +114,14 @@ namespace Util {
 			for (int taskI = 0; taskI < nAssignments; taskI++) {
 				int threadIdx = idleThreadIdx.front();
 				idleThreadIdx.pop();
-				threads[threadIdx]->SetTask(std::move(tasks[taskI]));
-				Util::Log::Debug(name + ": Added task (ID: " + std::to_string(tasks[taskI].GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
+				threads[threadIdx]->SetTask(tasks[taskI].get());
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(tasks[taskI]->GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
 			}
 
 			//! Add remaining tasks to the pending queue
 			for (int taskI = nAssignments; taskI < nTasks; taskI++) {
-				taskQueue.push(std::move(tasks[taskI]));
-				Util::Log::Debug(name + ": Added task (ID: " + std::to_string(tasks[taskI].GetUID()) + " to work queue");
+				taskQueue.push(tasks[taskI].get());
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(tasks[taskI]->GetUID()) + ") to work queue");
 			}
 		}
 	}
@@ -130,7 +130,7 @@ namespace Util {
 	//! Delegates a task to be processed by the thread pool
 	//! 
 	template <class WorkerThreadType>
-	void ThreadPool<WorkerThreadType>::AddTask(TaskType& task) {
+	void ThreadPool<WorkerThreadType>::AddTask(TaskType* task) {
 		if (!isActive) {
 			Util::Log::Warn("Attempted to add a task on an inactive thread pool");
 			return;
@@ -143,13 +143,13 @@ namespace Util {
 			if (!idleThreadIdx.empty()) {
 				int threadIdx = idleThreadIdx.front();
 				idleThreadIdx.pop();
-				threads[threadIdx]->SetTask(std::move(task));
-				Util::Log::Debug(name + ": Added task (ID: " + std::to_string(task.GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
+				threads[threadIdx]->SetTask(task);
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(task->GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
 			}
 			else {
 				//! Add task to the pending queue since no worker is available
-				taskQueue.push(std::move(task));
-				Util::Log::Debug(name + ": Added task (ID: " + std::to_string(task.GetUID()) + " to work queue");
+				taskQueue.push(task);
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(task->GetUID()) + ") to work queue");
 			}
 		}
 	}

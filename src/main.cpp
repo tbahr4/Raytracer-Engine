@@ -26,7 +26,7 @@ int main() {
 		auto start = std::chrono::high_resolution_clock::now();
 		engine.DisplayFrame();
 		auto end = std::chrono::high_resolution_clock::now();
-		std::chrono::duration<double> duration = end - start;
+		std::chrono::duration<double> duration = end - start; int x = 0;
 		Util::Log::Warn(std::to_string(1 / duration.count()) + " FPS");
 	}
 

@@ -8,7 +8,7 @@
 
 namespace Util {
 
-	int WorkTask::nextUID = 0;
+	std::atomic<int> WorkTask::nextUID = 0;
 
 	WorkTask::WorkTask() {
 		this->uid = nextUID++;
@@ -16,6 +16,10 @@ namespace Util {
 
 	int WorkTask::GetUID() const {
 		return uid;
+	}
+
+	void WorkTask::GetNewUID() {
+		uid = ++nextUID;
 	}
 
 }; // namespace Util

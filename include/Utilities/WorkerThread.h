@@ -39,12 +39,13 @@ namespace Util {
 			, lastTaskID(-1)	
 			, taskComplete_Callback(taskComplete_Callback)
 			, awaitingTask(true)
+			, task(nullptr)
 		{}
 
-		void SetTask(TaskType& task) {
+		void SetTask(TaskType* task) {
 			{
 				std::lock_guard<std::mutex> lock(mutex);
-				this->task = std::make_unique<TaskType>(std::move(task));
+				this->task = task;
 				awaitingTask.store(false);
 			}
 			cond.notify_one();
@@ -66,7 +67,7 @@ namespace Util {
 		}
 
 	protected:
-		std::unique_ptr<TaskType> task;
+		const TaskType* task;
 		virtual bool HandleTask() = 0;
 		
 		int Run(void* vArgs) override {
@@ -82,12 +83,12 @@ namespace Util {
 					}
 
 					lastTaskID.store(task->GetUID());
-					Util::Log::Debug(GetName() + ": Thread received new task (ID: " + std::to_string(task->GetUID()) + ")");
+					Util::Log::Debug(GetName() + ": Thread received new task (Task ID: " + std::to_string(task->GetUID()) + ")");
 				}
 
 				//! Handle latest task
 				bool success = HandleTask();
-				Util::Log::Debug(GetName() + ": Thread completed task (ID: " + std::to_string(task->GetUID()) + ")");
+				Util::Log::Debug(GetName() + ": Thread completed task (Task ID: " + std::to_string(task->GetUID()) + ")");
 
 				//! Perform callback
 				if (taskComplete_Callback) {

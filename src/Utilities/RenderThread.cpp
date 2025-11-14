@@ -21,7 +21,7 @@ namespace Util {
 		/* ----------------------------------------------------------------
 		 * Calculate total light for each ray
 		 * ---------------------------------------------------------------- */
-		const Util::RenderTask* taskRef = task.get();
+		const Util::RenderTask* taskRef = task;
 		int startIdx = taskRef->startIdx;
 		int endIdx = taskRef->endIdx;
 		const std::vector<Renderer::RayMgr::Ray>* rays = taskRef->rays;

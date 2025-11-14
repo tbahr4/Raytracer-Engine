@@ -97,7 +97,11 @@ namespace Renderer {
 	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const {
 		//! Base case
 		if (depth > maxRayDepth) {
-			return { 0,0,0 };	// No light contribution
+			if (ray.direction.y < 0) {
+				return { 45,45,45 };
+			}
+
+			return { 75,75,255 };	// No light contribution
 		}
 
 		//! Get first collision
@@ -105,7 +109,11 @@ namespace Renderer {
 
 		if (firstCol == nullptr) {
 			// No further contribution
-			return { 0,0,0 };
+			if (ray.direction.y < 0) {
+				return { 45,45,45 };
+			}
+
+			return { 75,75,255 };
 		}
 		
 		//! Get object's light properties
