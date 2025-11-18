@@ -15,7 +15,8 @@ namespace MaterialMgr {
 		AIR = 0,
 		TEST_MAT = 1,
 		TEST_MAT_2 = 2,
-		TEST_MAT_3 = 3
+		TEST_MAT_3 = 3,
+		TEST_MAT_4 = 4
 	};
 
 	struct Material {
@@ -36,7 +37,8 @@ namespace MaterialMgr {
 		{MATERIAL_ID::AIR,		  Material(Util::Vector3<double>(0,0,0), 0, 1, 1)},
 		{MATERIAL_ID::TEST_MAT,   Material(Util::Vector3<double>(0,0,255), 0.125, 0.5, 1.1)},
 		{MATERIAL_ID::TEST_MAT_2, Material(Util::Vector3<double>(255,50,200), 0.3, 0, 1.3)},
-		{MATERIAL_ID::TEST_MAT_3, Material(Util::Vector3<double>(50,255,50), 0.2, 0.2, 1)}
+		{MATERIAL_ID::TEST_MAT_3, Material(Util::Vector3<double>(50,255,50), .79, 0, 1)},
+		{MATERIAL_ID::TEST_MAT_4, Material(Util::Vector3<double>(255,255,255), 0, 0, 1)}
 	};
 
 	const Material& GetMaterial(MATERIAL_ID matID);

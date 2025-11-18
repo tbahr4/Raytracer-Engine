@@ -32,7 +32,6 @@ namespace Util {
 		int frameWidth = frame->GetWidth();
 		int frameHeight = frame->GetHeight();
 
-		// TODO: This logic should be done in the renderer 
 		for (int rayIdx = startIdx; rayIdx < endIdx; rayIdx++) {
 			const Renderer::RayMgr::Ray& ray = (*rays)[rayIdx];
 			Util::Vector3 color = renderer->CalcTotalLight(ray);

@@ -4,6 +4,7 @@
 //! 
 #pragma once
 
+#include <cassert>
 #include "Util.h"
 #include "World.h"
 #include "Object.h"

@@ -97,8 +97,7 @@ namespace InputMgr {
 		int dRoll = activeActions.count(INPUT_ACTION::ROLL_LEFT) - activeActions.count(INPUT_ACTION::ROLL_RIGHT);
 
 		Util::Rotation& rotation = player->GetCamera()->GetRotation();
-		double rotSpeed = .1;	// TODO: Configurable
-		rotation.roll += dRoll * rotSpeed;
+		rotation.roll += dRoll * Config::ROTATION_SPEED;
 	}
 
 }; // namespace InputMgr

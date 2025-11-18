@@ -15,7 +15,11 @@
 
 
 
+
 namespace Renderer {
+
+	class Engine;
+	
 
 	class Renderer {
 	private:

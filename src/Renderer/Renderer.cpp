@@ -3,6 +3,8 @@
 //! Central component for rendering logic
 //! 
 #include "Renderer.h"
+#include "Engine.h"
+using namespace Engine;
 
 
 
@@ -106,11 +108,7 @@ namespace Renderer {
 	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const {
 		//! Base case
 		if (depth > maxRayDepth) {
-			if (ray.direction.y < 0) {
-				return { 45,45,45 };
-			}
-
-			return { 75,75,255 };	// No light contribution
+			return ray.direction.y < 0 ? Config::FLOOR_COLOR : Config::CEILING_COLOR;
 		}
 
 		//! Get first collision
@@ -118,11 +116,7 @@ namespace Renderer {
 
 		if (firstCol == nullptr) {
 			// No further contribution
-			if (ray.direction.y < 0) {
-				return { 45,45,45 };
-			}
-
-			return { 75,75,255 };
+			return ray.direction.y < 0 ? Config::FLOOR_COLOR : Config::CEILING_COLOR;
 		}
 		
 		//! Get object's light properties
@@ -163,10 +157,10 @@ namespace Renderer {
 				double intensity = std::max(0.0, firstCol->normal.Dot(diffuseRay.direction));
 
 				// TODO: Calculate light falloff
-				// TODO: add light color
+				const Util::Vector3<double> lightColor = Config::LIGHT_COLOR / 255; // TODO: Create light object as renderable
 
 				//! Calculate color
-				diffuseComps[lightI] = firstCol->object->GetMaterial().color * intensity;
+				diffuseComps[lightI] = firstCol->object->GetMaterial().color * lightColor * intensity;
 			}
 			else {
 				diffuseComps[lightI] = { 0,0,0 };

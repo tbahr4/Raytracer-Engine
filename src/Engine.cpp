@@ -4,8 +4,7 @@
 //! 
 #include "Engine.h"
 
-// TODO: Make this configurable
-//#define SINGLE_THREADED
+
 
 
 
@@ -16,7 +15,7 @@ namespace Engine {
 	Engine::Engine()
 		: isActive(false)
 		, renderPool("RenderPool", Config::NUM_RENDER_THREADS, Config::RESOLUTION_DOWN_SCALE)
-		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT) / (double)Config::NUM_RAYS_PER_TASK))
+		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))
 	{
 		for (int i = 0; i < tasks.size(); i++) {
 			tasks[i] = std::make_shared<Util::RenderTask>();
@@ -49,26 +48,37 @@ namespace Engine {
 		World::Object obj(MaterialMgr::MATERIAL_ID::TEST_MAT,
 			Util::Transform(Util::Vector3<double>(0, 0, -5),
 				Util::Rotation(0, 0, 0),
-				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+				Util::Vector3<double>(1, 1, 1)), 
+			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj));
 
 		World::Object obj2(MaterialMgr::MATERIAL_ID::TEST_MAT_2,
 			Util::Transform(Util::Vector3<double>(3, 3, -5),
 				Util::Rotation(0, 0, 0),
-				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+				Util::Vector3<double>(1, 1, 1)), 
+			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj2));
 
 		World::Object obj3(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
 			Util::Transform(Util::Vector3<double>(-3, 3, -5),
 				Util::Rotation(0, 0, 0),
-				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+				Util::Vector3<double>(1, 1, 1)), 
+			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj3));
 
 		World::Object obj4(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
 			Util::Transform(Util::Vector3<double>(0, 0, -8),
 				Util::Rotation(0, 0, 0),
-				Util::Vector3<double>(1, 1, 1)), World::ShapeType::SPHERE);
+				Util::Vector3<double>(1, 1, 1)), 
+			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj4));
+
+		World::Object obj5(MaterialMgr::MATERIAL_ID::TEST_MAT_4,
+			Util::Transform(Util::Vector3<double>(0, -15, -5),
+				Util::Rotation(0, 0, 0),
+				Util::Vector3<double>(10, 10, 10)),
+			World::ShapeType::SPHERE);
+		world->AddObject(std::move(obj5));
 
 		/* ----------------------------------------------------------------
 		* Initialize renderer

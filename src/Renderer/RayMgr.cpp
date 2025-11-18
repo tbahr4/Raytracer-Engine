@@ -39,7 +39,8 @@ namespace Renderer {
 				case World::ShapeType::SPHERE:
 					
 					Util::Vector3<double> sphereCenter = object->GetPosition();
-					double sphereRadius = 1;	// FIXME: Need children types of shape object
+					double sphereRadius = object->GetScale().x;	// FIXME: Need children types of shape object
+					assert(object.GetScale()->x == object.GetScale()->y == object.GetScale()->z);
 					// TODO: Add rotation, scale of objects (sphere rotation does not matter)
 
 					Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
@@ -113,7 +114,8 @@ namespace Renderer {
 			case World::ShapeType::SPHERE:
 
 				Util::Vector3<double> sphereCenter = object.GetPosition();
-				double sphereRadius = 1;	// FIXME: Need children types of shape object
+				double sphereRadius = object.GetScale().x;	// FIXME: Need children types of shape object
+				assert(object.GetScale().x == object.GetScale().y == object.GetScale().z);
 				// TODO: Add rotation, scale of objects (sphere rotation does not matter)
 
 				Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
