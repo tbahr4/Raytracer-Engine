@@ -104,88 +104,78 @@ namespace Renderer {
 
 	//! _CalcTotalLightHelper
 	//! Helper function for CalcTotalLight
+	//! Note: This function is for primary rays only (e.g., collisions return the color) instead of shadow rays (collisions return black).
+	//!       Shadow rays (from diffuse calculations) do not recurse
 	//! 
 	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const {
 		//! Base case
 		if (depth > maxRayDepth) {
-			return ray.direction.y < 0 ? Config::FLOOR_COLOR : Config::CEILING_COLOR;
+			return GetSkyboxColor(ray);
 		}
 
-		//! Get first collision
+		//! Fire ray
 		std::unique_ptr<RayMgr::CollisionInfo> firstCol = RayMgr::GetFirstCollision(*world, ray);
 
 		if (firstCol == nullptr) {
-			// No further contribution
-			return ray.direction.y < 0 ? Config::FLOOR_COLOR : Config::CEILING_COLOR;
+			return GetSkyboxColor(ray);
 		}
-		
-		//! Get object's light properties
+
+		//! Get percentage contribution of each ray component
 		double pctRefl = firstCol->object->GetMaterial().reflectivity;
 		double pctRefr = firstCol->object->GetMaterial().transparency;
 		double pctDiff = 1 - pctRefl - pctRefr;
+		assert(pctDiff + pctRefl + pctRefr == 1);
 
-		if (pctDiff < 0) {
-			Util::Log::Error("Renderer: Invalid object properties. Sum of reflectivity and transparency must be at most 1.0");
-			return { 0,0,0 };
-		}
-
-		//! Get coincident rays
-		std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());  
-		RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
-		RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
-		
-		// TODO: return early if max depth
-		// TODO: only spawn ray if light property allows it
-
-		/* ----------------------------------------------------------------
-		 * Get component light
-		 * ---------------------------------------------------------------- */
-		//! Diffuse
-		// TODO: functionize this
-		std::vector<Util::Vector3<double>> diffuseComps(rayDiffs.size());
-		for (int lightI = 0; lightI < diffuseComps.size(); lightI++) {
-			//! Calculate diffuse due to given light
-			const RayMgr::Ray& diffuseRay = rayDiffs[lightI];
-
-			//! Color material if light is reached
-			std::unique_ptr<RayMgr::CollisionInfo> diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay);
-			if (diffuseCol == nullptr) {	// TODO: Bad check, need to check if light is collided with (in case something is behind the light). Make light an object to make collision info check simply "isLight?"
-				// Not obscured by an object before reaching light
-				// FIXME: Diffuse collisions with transparent objects allows light to pass through
-
-				//! Calculate intensity
-				double intensity = std::max(0.0, firstCol->normal.Dot(diffuseRay.direction));
-
-				// TODO: Calculate light falloff
-				const Util::Vector3<double> lightColor = Config::LIGHT_COLOR / 255; // TODO: Create light object as renderable
-
-				//! Calculate color
-				diffuseComps[lightI] = firstCol->object->GetMaterial().color * lightColor * intensity;
-			}
-			else {
-				diffuseComps[lightI] = { 0,0,0 };
-			}
-		}
-		
-		firstCol.reset();
-
-		// Sum diffuse light contributions
-		// TODO: add HDR rendering for exceeding 255 intensity
+		//! Calculate diffuse component
 		Util::Vector3<double> colDiff = { 0,0,0 };
-		for (int lightI = 0; lightI < diffuseComps.size(); lightI++) {
-			colDiff = colDiff + diffuseComps[lightI];
+		if (pctDiff > 0) {
+			std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());
+			assert(rayDiffs.size() == 1); // TODO: Figure out how to combine multiple light sources
+
+			//! Get collision
+			auto diffCollisions = RayMgr::GetAllCollisions(*world, rayDiffs[0]);
+			
+			//! Determine loss due to object collision opacity
+			double opacityLossMult = 1;
+			for (int colI = 0; colI < diffCollisions.size(); colI++) {
+				auto col = diffCollisions[colI].get();
+				opacityLossMult *= col->object->GetMaterial().transparency;
+			
+				if (opacityLossMult == 0) {
+					break;
+				}
+			}
+
+			//! Determine final color
+			double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[0].direction)) * opacityLossMult;
+			const Util::Vector3<double> lightColor = Config::LIGHT_COLOR / 255; // TODO: Create light object as renderable
+			colDiff = firstCol->object->GetMaterial().color * lightColor * intensity;
 		}
-		
-		//! Reflection and refraction
-		Util::Vector3<double> colRefl = _CalcTotalLightHelper(rayRefl, depth + 1);
-		Util::Vector3<double> colRefr = _CalcTotalLightHelper(rayRefr, depth + 1);
-		
-		/* ----------------------------------------------------------------
-		 * Get total light
-		 * ---------------------------------------------------------------- */
-		Util::Vector3<double> totalLight = (colDiff * pctDiff) + (colRefl * pctRefl) + (colRefr * pctRefr);
-		
-		return totalLight;
+
+		//! Calculate reflection component
+		Util::Vector3<double> colRefl = { 0,0,0 };
+		if (pctRefl > 0) {
+			RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
+			colRefl = _CalcTotalLightHelper(rayRefl, depth + 1);
+		}
+
+		//! Calculate refraction component
+		Util::Vector3<double> colRefr = { 0,0,0 };
+		if (pctRefr > 0) {
+			RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
+			colRefr = _CalcTotalLightHelper(rayRefr, depth + 1);
+		}
+
+		//! Determine total resultant light
+		return (colDiff * pctDiff) + (colRefl * pctRefl) + (colRefr * pctRefr);
+	}
+
+	//! GetSkyboxColor
+	//! Returns the skybox color that results from the given ray
+	//! 
+	Util::Vector3<double> Renderer::GetSkyboxColor(const RayMgr::Ray& ray) const {
+		double normT = (ray.direction.y + 1) / 2;
+		return (1 - normT) * Config::FLOOR_COLOR + normT * Config::CEILING_COLOR;
 	}
 
 	//! GenerateRays

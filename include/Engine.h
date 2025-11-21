@@ -12,7 +12,7 @@
 #include "ThreadPool.h"
 #include "RenderThread.h"
 
-//#define SINGLE_THREADED
+#define SINGLE_THREADED
 
 
 
@@ -21,7 +21,7 @@ namespace Engine {
 	namespace Config {
 		//! General
 		constexpr char* WINDOW_TITLE = "Raytracer";
-		constexpr int NUM_RENDER_THREADS = 8;
+		constexpr int NUM_RENDER_THREADS = 16;
 		constexpr int SCREEN_WIDTH = 1920*2;
 		constexpr int SCREEN_HEIGHT = 1080*2;
 		constexpr double FOV = 60;
@@ -29,11 +29,12 @@ namespace Engine {
 		const Util::Rotation START_ROT = { 0, 0, 0 };
 		constexpr double MOUSE_SENSITIVITY = .0025;
 		constexpr double ROTATION_SPEED = 0.1;
-		constexpr int MAX_RAY_DEPTH = 15; // Maximum number of ray bounces to render
+		constexpr int MAX_RAY_DEPTH = 5; // Maximum number of ray bounces to render
 		constexpr int NUM_RAYS_PER_TASK = 1000; // Number of ray traces to be packaged per worker thread
-		constexpr int RESOLUTION_DOWN_SCALE = 4; // Scales down the ray count (e.g., NxN pixels per ray)
+		constexpr int RESOLUTION_DOWN_SCALE = 8; // Scales down the ray count (e.g., NxN pixels per ray)
 
 		//! Rendering
+		// TODO: sort
 
 		//! Lighting
 		const Util::Vector3<double> FLOOR_COLOR = { 45,45,45 };

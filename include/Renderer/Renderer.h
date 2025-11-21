@@ -59,6 +59,8 @@ namespace Renderer {
 	private:
 		//! Helper functions
 		Util::Vector3<double> _CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const;
+		Util::Vector3<double> GetSkyboxColor(const RayMgr::Ray& ray) const;
+
 	};
 
 }; // namespace Renderer

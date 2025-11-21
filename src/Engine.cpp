@@ -66,7 +66,7 @@ namespace Engine {
 			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj3));
 
-		World::Object obj4(MaterialMgr::MATERIAL_ID::TEST_MAT_3,
+		World::Object obj4(MaterialMgr::MATERIAL_ID::TEST_MAT_4,
 			Util::Transform(Util::Vector3<double>(0, 0, -8),
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(1, 1, 1)), 
