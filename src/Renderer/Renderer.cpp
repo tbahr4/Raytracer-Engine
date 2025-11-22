@@ -132,24 +132,33 @@ namespace Renderer {
 			std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());
 			assert(rayDiffs.size() == 1); // TODO: Figure out how to combine multiple light sources
 
-			//! Get collision
-			auto diffCollisions = RayMgr::GetAllCollisions(*world, rayDiffs[0]);
-			
-			//! Determine loss due to object collision opacity
-			double opacityLossMult = 1;
-			for (int colI = 0; colI < diffCollisions.size(); colI++) {
-				auto col = diffCollisions[colI].get();
-				opacityLossMult *= col->object->GetMaterial().transparency;
-			
-				if (opacityLossMult == 0) {
-					break;
+			Util::Vector3<double> totLight = { 0,0,0 };
+			for (int rayI = 0; rayI < rayDiffs.size(); rayI++) {
+				//! Get collision
+				auto diffCollisions = RayMgr::GetAllCollisions(*world, rayDiffs[rayI]);
+
+				//! Determine loss due to object collision opacity
+				double opacityLossMult = 1;
+				for (int colI = 0; colI < diffCollisions.size(); colI++) {
+					auto col = diffCollisions[colI].get();
+					opacityLossMult *= col->object->GetMaterial().transparency;
+
+					if (opacityLossMult == 0) {
+						break;
+					}
 				}
+
+				//! Determine light of component
+				double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[rayI].direction)) * opacityLossMult;
+				const Util::Vector3<double> lightColor = (rayI == 0 ? Config::LIGHT_COLOR : Util::Vector3<double>{0,0,150}) / 255; // TODO: Create light object as renderable
+				totLight += lightColor * intensity;
 			}
 
 			//! Determine final color
-			double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[0].direction)) * opacityLossMult;
-			const Util::Vector3<double> lightColor = Config::LIGHT_COLOR / 255; // TODO: Create light object as renderable
-			colDiff = firstCol->object->GetMaterial().color * lightColor * intensity;
+			totLight.x = std::min(1.0, totLight.x);
+			totLight.y = std::min(1.0, totLight.y);
+			totLight.z = std::min(1.0, totLight.z);
+			colDiff = firstCol->object->GetMaterial().color * totLight;
 		}
 
 		//! Calculate reflection component

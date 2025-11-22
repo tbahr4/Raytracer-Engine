@@ -78,7 +78,7 @@ namespace Engine {
 				Util::Rotation(0, 0, 0),
 				Util::Vector3<double>(10, 10, 10)),
 			World::ShapeType::SPHERE);
-		world->AddObject(std::move(obj5));
+		//world->AddObject(std::move(obj5));
 
 		/* ----------------------------------------------------------------
 		* Initialize renderer

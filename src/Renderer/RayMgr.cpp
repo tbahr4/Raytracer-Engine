@@ -149,13 +149,19 @@ namespace Renderer {
 			}
 
 			// FIXME: Make this work in a loop of all lights
-			const Util::Vector3<double> lightPos = { 0,5,-3 };
-			RayMgr::Ray diffuseRay;
-			diffuseRay.origin = colInfo->position;
-			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
+			const Util::Vector3<double> lightPos1 = { 0,5,-3 }; // TODO: light object
+			const Util::Vector3<double> lightPos2 = { 5,-5,-3 };
+
+			RayMgr::Ray diffuseRay1;
+			diffuseRay1.origin = colInfo->position;
+			diffuseRay1.direction = (lightPos1 - diffuseRay1.origin).Normalized();
+
+			RayMgr::Ray diffuseRay2;
+			diffuseRay2.origin = colInfo->position;
+			diffuseRay2.direction = (lightPos2 - diffuseRay2.origin).Normalized();
 
 			//! Construct rays
-			std::vector<RayMgr::Ray> rays{ diffuseRay };
+			std::vector<RayMgr::Ray> rays{ diffuseRay1, diffuseRay2 };
 			return rays;
 		}
 
