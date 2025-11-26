@@ -76,9 +76,17 @@ namespace Engine {
 		World::Object obj5(MaterialMgr::MATERIAL_ID::TEST_MAT_4,
 			Util::Transform(Util::Vector3<double>(0, -15, -5),
 				Util::Rotation(0, 0, 0),
-				Util::Vector3<double>(10, 10, 10)),
+				Util::Vector3<double>(3, 3, 3)),
 			World::ShapeType::SPHERE);
-		//world->AddObject(std::move(obj5));
+		world->AddObject(std::move(obj5));
+
+		World::Object obj6(MaterialMgr::MATERIAL_ID::TEST_MAT_5,
+			Util::Transform(Util::Vector3<double>(0, 5, -5),
+				Util::Rotation(0, 0, 0),
+				Util::Vector3<double>(0.5, 0.5, 0.5)),
+			World::ShapeType::SPHERE);
+		world->AddObject(std::move(obj6));
+
 
 		/* ----------------------------------------------------------------
 		* Initialize renderer

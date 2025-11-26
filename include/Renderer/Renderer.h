@@ -12,6 +12,7 @@
 #include "Player.h"
 #include "Util.h"
 #include "World.h"
+#include "Skybox.h"
 
 
 
@@ -27,6 +28,7 @@ namespace Renderer {
 		DisplayDriver display;
 		std::shared_ptr<World::World> world;
 		std::shared_ptr<InputMgr::InputMgr> inputMgr;
+		std::unique_ptr<World::Skybox> skybox;
 
 		//! Internal variables
 		bool isInitialized = false;

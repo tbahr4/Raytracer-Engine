@@ -19,6 +19,7 @@ namespace Renderer {
 	, inputMgr(inputMgr)
 	, maxRayDepth(maxRayDepth)
 	, resDownScale(resDownScale)
+	, skybox(std::make_unique<World::Skybox>())
 	{}
 
 	//! Init
@@ -130,7 +131,6 @@ namespace Renderer {
 		Util::Vector3<double> colDiff = { 0,0,0 };
 		if (pctDiff > 0) {
 			std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());
-			assert(rayDiffs.size() == 1); // TODO: Figure out how to combine multiple light sources
 
 			Util::Vector3<double> totLight = { 0,0,0 };
 			for (int rayI = 0; rayI < rayDiffs.size(); rayI++) {
@@ -149,7 +149,7 @@ namespace Renderer {
 				}
 
 				//! Determine light of component
-				double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[rayI].direction)) * opacityLossMult;
+				double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[rayI].direction)) * opacityLossMult; // TODO: HDR
 				const Util::Vector3<double> lightColor = (rayI == 0 ? Config::LIGHT_COLOR : Util::Vector3<double>{0,0,150}) / 255; // TODO: Create light object as renderable
 				totLight += lightColor * intensity;
 			}
@@ -183,8 +183,56 @@ namespace Renderer {
 	//! Returns the skybox color that results from the given ray
 	//! 
 	Util::Vector3<double> Renderer::GetSkyboxColor(const RayMgr::Ray& ray) const {
-		double normT = (ray.direction.y + 1) / 2;
-		return (1 - normT) * Config::FLOOR_COLOR + normT * Config::CEILING_COLOR;
+		//double normT = (ray.direction.y + 1) / 2;
+		//return (1 - normT) * Config::FLOOR_COLOR + normT * Config::CEILING_COLOR;
+
+
+		//! Get the side
+		World::Skybox::Side side;
+
+		double rayX = ray.direction.x;
+		double rayY = ray.direction.y;
+		double rayZ = ray.direction.z;
+
+		double  absX = std::abs(rayX);
+		double  absY = std::abs(rayY);
+		double  absZ = std::abs(rayZ);
+
+		if (absX >= absY && absX >= absZ) { // X is dominant
+			if (rayX > 0) side = World::Skybox::Side::LEFT;
+			else       side = World::Skybox::Side::RIGHT;
+		}
+		else if (absY >= absX && absY >= absZ) { // Y is dominant
+			if (rayY > 0) side = World::Skybox::Side::UP;
+			else       side = World::Skybox::Side::DOWN;
+		}
+		else { // Z is dominant
+			if (rayZ > 0) side = World::Skybox::Side::FRONT;
+			else       side = World::Skybox::Side::BACK;
+		}
+
+		//! Get UV coordinate
+		double u, v;
+
+		switch (side) {
+		case World::Skybox::Side::RIGHT:  u = -rayZ / absX; v = -rayY / absX; break;
+		case World::Skybox::Side::LEFT:   u = rayZ / absX; v = -rayY / absX; break;
+		case World::Skybox::Side::UP:    u = rayX / absY; v = rayZ / absY; break;
+		case World::Skybox::Side::DOWN: u = rayX / absY; v = -rayZ / absY; break;
+		case World::Skybox::Side::FRONT:  u = rayX / absZ; v = -rayY / absZ; break;
+		case World::Skybox::Side::BACK:   u = -rayX / absZ; v = -rayY / absZ; break;
+		default: u = 0; v = 0; break;
+		}
+
+		u = 0.5 + (-u * .5);
+		v = 0.5 + (v * .5);
+
+		if (side == World::Skybox::Side::LEFT || side == World::Skybox::Side::RIGHT) {
+			u = 1-u;
+		}
+
+		//! Determine pixel
+		return skybox->GetPixel(u, v, side);
 	}
 
 	//! GenerateRays
@@ -208,7 +256,7 @@ namespace Renderer {
 		std::vector<RayMgr::Ray> rays(raysX * raysY);
 
 		double halfWidth = tan((camera->GetFOV() * Util::PI / 180) / 2);
-		double aspectRatio = frameWidth / frameHeight;
+		double aspectRatio = static_cast<double>(frameWidth) / static_cast<double>(frameHeight);
 		double halfHeight = halfWidth / aspectRatio;
 
 		int rayIdx = 0;

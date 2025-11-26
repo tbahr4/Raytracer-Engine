@@ -291,14 +291,15 @@ namespace Renderer {
 			//! Handle collision depending on object type
 			std::unique_ptr<CollisionInfo> collision = nullptr;
 
-			switch (object->GetShapeType()) {
-			case World::ShapeType::CUBE:
-			case World::ShapeType::RECTANGLE:
-			default:
-				Util::Log::Error("GetFirstCollision: Unimplemented object shape defined for collision check");
-				return nullptr;
-
-			case World::ShapeType::SPHERE:
+			World::ShapeType shape = object->GetShapeType();
+			
+			if (shape == World::ShapeType::CUBE) {
+				throw std::invalid_argument("GetCollisionFromObject: Unimplemented shape");
+			}
+			else if (shape == World::ShapeType::RECTANGLE) {
+				throw std::invalid_argument("GetCollisionFromObject: Unimplemented shape");
+			}
+			else if (shape == World::ShapeType::SPHERE) {
 
 				Util::Vector3<double> sphereCenter = object->GetPosition();
 				double sphereRadius = object->GetScale().x;	// FIXME: Need children types of shape object
@@ -317,7 +318,7 @@ namespace Renderer {
 
 				//! Check for collision
 				//! 
-				
+
 				if (discriminant < 0) {
 					//! Missed the object
 					return nullptr;
@@ -353,9 +354,12 @@ namespace Renderer {
 					collision->exitDistance = roots[1];
 					collision->exitPosition = ray.origin + ray.direction * collision->exitDistance;
 					collision->exitNormal = (collision->exitPosition - sphereCenter).Normalized();
-					
+
 					return collision;
 				}
+			}
+			else {
+				throw std::invalid_argument("GetCollisionFromObject: Invalid shape");
 			}
 		}
 

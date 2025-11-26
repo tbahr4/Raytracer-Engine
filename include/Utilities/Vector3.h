@@ -108,6 +108,10 @@ namespace Util {
 			z -= other.z;
 			return *this;
 		}
+		friend std::ostream& operator<<(std::ostream& os, const Vector3<T>& vec) {
+			os << vec.x << ", " << vec.y << ", " << vec.z;
+			return os;
+		}
 	};
 
 }; // namespace Util
