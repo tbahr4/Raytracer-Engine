@@ -10,8 +10,10 @@ namespace Renderer {
 	//! Constructor
 	//! Creates a frame buffer of specified size
 	//! 
-	Frame::Frame(std::string name, int width, int height) {
+	Frame::Frame(std::string name, int posX, int posY, int width, int height) {
 		this->name = name;
+		this->posX = posX;
+		this->posY = posY;
 		this->width = width;
 		this->height = height;
 		this->pixels = new uint32_t[(double)width * (double)height]();
@@ -28,6 +30,20 @@ namespace Renderer {
 	//! 
 	std::string Frame::GetName() const {
 		return name;
+	}
+
+	//! GetPosX
+	//! Returns the X position of the frame
+	//! 
+	int Frame::GetPosX() const {
+		return this->posX;
+	}
+
+	//! GetPosY
+	//! Returns the Y position of the frame
+	//! 
+	int Frame::GetPosY() const {
+		return this->posY;
 	}
 
 	//! GetWidth
@@ -75,5 +91,13 @@ namespace Renderer {
 
 		return pixels[x + (width * y)];
 	}
+
+	//! FrameContext
+	//! Constructor
+	//! 
+	FrameContext::FrameContext(std::shared_ptr<Frame> frame, std::shared_ptr<Player::Camera> camera) 
+		: frame(frame)
+		, camera(camera)
+	{}
 
 }; // namespace Renderer

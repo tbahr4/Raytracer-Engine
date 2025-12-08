@@ -3,6 +3,7 @@
 //! Defines an worker thread that processes rendering tasks
 //! 
 #include "RenderThread.h"
+#include "Renderer.h"
 
 
 
@@ -28,7 +29,7 @@ namespace Util {
 		const std::vector<Renderer::RayMgr::Ray>* rays = taskRef->rays;
 		Renderer::Renderer* renderer = taskRef->renderer;
 
-		Renderer::Frame* frame = renderer->GetRawFrame();
+		std::shared_ptr<Renderer::Frame> frame = taskRef->frameCtx->frame;
 		int frameWidth = frame->GetWidth();
 		int frameHeight = frame->GetHeight();
 

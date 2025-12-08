@@ -13,18 +13,20 @@
 #include "Util.h"
 #include "World.h"
 #include "Skybox.h"
-
+#include "ThreadPool.h"
+#include "RenderThread.h"
+namespace Engine {
+	class Engine;
+}
 
 
 
 namespace Renderer {
 
-	class Engine;
-	
-
 	class Renderer {
 	private:
 		Frame window;
+		std::vector<std::shared_ptr<FrameContext>> frames;
 		DisplayDriver display;
 		std::shared_ptr<World::World> world;
 		std::shared_ptr<InputMgr::InputMgr> inputMgr;
@@ -33,6 +35,11 @@ namespace Renderer {
 		//! Internal variables
 		bool isInitialized = false;
 
+#ifndef SINGLE_THREADED
+		std::vector<std::shared_ptr<Util::RenderTask>> renderTasks;
+		Util::ThreadPool<Util::RenderThread> renderPool;	// Rendering thread pool
+#endif
+
 		//! Properties
 		const int maxRayDepth;
 		const int resDownScale; // Downscaling factor of resolution
@@ -40,6 +47,7 @@ namespace Renderer {
 	public:
 		//! Constructors
 		Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth, int resDownScale);
+		~Renderer();
 
 		//! Initialization
 		bool Init();
@@ -48,17 +56,20 @@ namespace Renderer {
 		bool IsActive() const;	
 
 		//! Interface functions
-		void ProduceWorldFrame(std::shared_ptr<Player::Player> player);
+		void AddFrame(std::string name, int x, int y, int sizeX, int sizeY, std::shared_ptr<Player::Camera> camera);
+		void RenderFrames();
 		void DisplayFrame();
-		std::vector<RayMgr::Ray> GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight);
+		std::vector<RayMgr::Ray> GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight);
 		Util::Vector3<double> CalcTotalLight(const RayMgr::Ray& ray) const;
-		Frame* GetRawFrame();
+		Frame* GetRawWindowFrame();
 
 		//! Accessors
 		int GetWindowWidth() const;
 		int GetWindowHeight() const;
 
 	private:
+		void ProduceFrame(std::shared_ptr<FrameContext> frameCtx);
+
 		//! Helper functions
 		Util::Vector3<double> _CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const;
 		Util::Vector3<double> GetSkyboxColor(const RayMgr::Ray& ray) const;

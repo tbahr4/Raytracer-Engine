@@ -14,19 +14,7 @@ namespace Engine {
 	//! 
 	Engine::Engine()
 		: isActive(false)
-		, renderPool("RenderPool", Config::NUM_RENDER_THREADS, Config::RESOLUTION_DOWN_SCALE)
-		, tasks(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))
-	{
-		for (int i = 0; i < tasks.size(); i++) {
-			tasks[i] = std::make_shared<Util::RenderTask>();
-		}
-	}
-
-	//! Destructor
-	//! 
-	Engine::~Engine() {
-		renderPool.Shutdown();
-	}
+	{}
 
 	//! Init
 	//! Initializes the engine to an active state
@@ -36,8 +24,8 @@ namespace Engine {
 		* Initialize components
 		* ---------------------------------------------------------------- */
 		world = std::make_shared<World::World>();
-		camera = std::make_unique<Player::Camera>(Config::START_POS, Config::START_ROT, Config::FOV);
-		player = std::make_shared<Player::Player>(std::move(camera));
+		camera = std::make_shared<Player::Camera>(Config::START_POS, Config::START_ROT, Config::FOV);
+		player = std::make_shared<Player::Player>(camera);
 		inputMgr = std::make_unique<InputMgr::InputMgr>(player, world);
 		renderer = std::make_unique<Renderer::Renderer>(Config::WINDOW_TITLE, Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, player, world, inputMgr, Config::MAX_RAY_DEPTH, Config::RESOLUTION_DOWN_SCALE);
 
@@ -87,6 +75,12 @@ namespace Engine {
 			World::ShapeType::SPHERE);
 		world->AddObject(std::move(obj6));
 
+		/* ----------------------------------------------------------------
+		* Add rendering frames
+		* ---------------------------------------------------------------- */
+		renderer->AddFrame("Main Frame", 0, 0, Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, camera);
+		//renderer->AddFrame("Main Frame mini", Config::SCREEN_WIDTH -1920/2, 0, 1920/2, 1920/4, camera);
+
 
 		/* ----------------------------------------------------------------
 		* Initialize renderer
@@ -96,13 +90,6 @@ namespace Engine {
 			Util::Log::Error("Engine: Failed to initialize renderer");
 			return false;
 		}
-
-#ifndef SINGLE_THREADED
-		/* ----------------------------------------------------------------
-		* Initialize render pool
-		* ---------------------------------------------------------------- */
-		renderPool.Init();
-#endif
 
 		isActive = true;
 		return true;
@@ -131,36 +118,10 @@ namespace Engine {
 			return false;
 		}
 
-		/* ----------------------------------------------------------------
-		* Generate world frame
-		* ---------------------------------------------------------------- */
-#ifdef SINGLE_THREADED
-		renderer->ProduceWorldFrame(player);
-		
-#else
-		//! Get rays to trace
-		std::vector<Renderer::RayMgr::Ray> rays = renderer->GenerateRays(player.get()->GetCamera(), renderer->GetWindowWidth(), renderer->GetWindowHeight());
+		//! Generate world frame
+		renderer->RenderFrames();
 
-		//! Split into rendering tasks
-		int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
-		assert(nTasks == tasks.size());
-
-		for (int taskI = 0; taskI < tasks.size(); taskI++) {
-			tasks[taskI]->GetNewUID();
-			tasks[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
-			tasks[taskI]->endIdx = std::min(tasks[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
-			tasks[taskI]->rays = &rays;
-			tasks[taskI]->renderer = renderer.get();
-		}
-
-		//! Add tasks to render pool
-		Util::Log::Debug("Adding " + std::to_string(tasks.size()) + " tasks");
-		renderPool.AddTasks(tasks);
-
-		renderPool.WaitIdle();
-#endif
-
-
+		//! Display the world frame
 		renderer->DisplayFrame();
 		return true;
 	}

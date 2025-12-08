@@ -9,8 +9,6 @@
 #include "Renderer.h"
 #include "World.h"
 #include "Object.h"
-#include "ThreadPool.h"
-#include "RenderThread.h"
 
 //#define SINGLE_THREADED
 
@@ -45,20 +43,16 @@ namespace Engine {
 	class Engine {
 	private:
 		bool isActive;				// Stores whether engine is initialized and active
-		Util::ThreadPool<Util::RenderThread> renderPool;	// Rendering thread pool
 
 		//! Sub-components
 		std::shared_ptr<World::World> world;
-		std::unique_ptr<Player::Camera> camera;
+		std::shared_ptr<Player::Camera> camera;
 		std::shared_ptr<Player::Player> player;
 		std::shared_ptr<InputMgr::InputMgr> inputMgr;
 		std::unique_ptr<Renderer::Renderer> renderer;
 
-		std::vector<std::shared_ptr<Util::RenderTask>> tasks;
-
 	public:
 		Engine();
-		~Engine();
 		
 		//! Interface functions
 		bool Init();

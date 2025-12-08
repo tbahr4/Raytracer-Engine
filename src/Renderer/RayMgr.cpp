@@ -361,6 +361,8 @@ namespace Renderer {
 			else {
 				throw std::invalid_argument("GetCollisionFromObject: Invalid shape");
 			}
+
+			return nullptr;
 		}
 
 	}; // namespace RayMgr

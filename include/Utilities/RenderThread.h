@@ -6,6 +6,9 @@
 
 #include "WorkerThread.h"
 #include "RenderTask.h"
+namespace Renderer {
+	class Renderer;
+}
 
 
 

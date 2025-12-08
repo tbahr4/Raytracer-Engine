@@ -13,14 +13,26 @@ namespace Renderer {
 	//! Constructor
 	//! 
 	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth, int resDownScale)
-	: window("WindowFrame", windowWidth, windowHeight)
+	: window("WindowFrame", 0, 0, windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
 	, inputMgr(inputMgr)
 	, maxRayDepth(maxRayDepth)
 	, resDownScale(resDownScale)
 	, skybox(std::make_unique<World::Skybox>())
-	{}
+	, renderPool("RenderPool", Config::NUM_RENDER_THREADS, Config::RESOLUTION_DOWN_SCALE)
+	, renderTasks(std::ceil((Config::SCREEN_WIDTH* Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))
+	{
+		for (int i = 0; i < renderTasks.size(); i++) {
+			renderTasks[i] = std::make_shared<Util::RenderTask>();
+		}
+	}
+
+	//! Destructor
+	//! 
+	Renderer::~Renderer() {
+		renderPool.Shutdown();
+	}
 
 	//! Init
 	//! Initializes the renderer to an active state
@@ -32,6 +44,11 @@ namespace Renderer {
 			Util::Log::Error("Renderer initialization failed");
 			return false;
 		}
+
+#ifndef SINGLE_THREADED
+		renderPool.Init();
+		Util::Log::Info("Render pool initialized");
+#endif
 
 		Util::Log::Info("Renderer initialized successfully");
 		this->isInitialized = true;
@@ -45,34 +62,86 @@ namespace Renderer {
 		return this->isInitialized && display.IsActive();
 	}
 
-	//! ProduceWorldFrame
-	//! Produces a world frame and stores within internal buffers for later rendering
+	//! ProduceFrame
+	//! Populates frame data and stores within internal buffers for later rendering
 	//! 
-	void Renderer::ProduceWorldFrame(std::shared_ptr<Player::Player> player) {
+	void Renderer::ProduceFrame(std::shared_ptr<FrameContext> frameCtx) {
 		/* ----------------------------------------------------------------
 		 * Generate rays from given screen frame
 		 * ---------------------------------------------------------------- */
-		int displayWidth = display.GetWidth();
-		int displayHeight = display.GetHeight();
-		std::vector<RayMgr::Ray> rays = GenerateRays(player->GetCamera(), displayWidth, displayHeight);
-
+		int frameWidth = frameCtx->frame->GetWidth();
+		int frameHeight = frameCtx->frame->GetHeight();
+		std::vector<RayMgr::Ray> rays = GenerateRays(frameCtx->camera, frameWidth, frameHeight);
 
 		/* ----------------------------------------------------------------
 		 * Calculate total light for each ray
 		 * ---------------------------------------------------------------- */
+
+#ifdef SINGLE_THREADED
 		for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
 			RayMgr::Ray& ray = rays[rayIdx];
 			Util::Vector3 color = CalcTotalLight(ray);
 
-			//! Set the window pixel
-			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
+			//! Set the frame's pixel
+			uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
 
-			int pxBase = (rayIdx * resDownScale) % displayWidth;
-			int pyBase = (rayIdx * resDownScale) / (displayWidth / resDownScale);
+			int pxBase = (rayIdx * resDownScale) % frameWidth;
+			int pyBase = (rayIdx * resDownScale) / (frameWidth / resDownScale);
 
-			for (int px = pxBase; px < pxBase + resDownScale && px < displayWidth; px++) { // Loop for downscaling
-				for (int py = pyBase; py < pyBase + resDownScale && py < displayHeight; py++) {
-					this->window.SetPixel(px, py, colorAdj);
+			for (int px = pxBase; px < pxBase + resDownScale && px < frameWidth; px++) { // Loop for downscaling
+				for (int py = pyBase; py < pyBase + resDownScale && py < frameHeight; py++) {
+					frameCtx->frame->SetPixel(px, py, colorAdj);
+				}
+			}
+		}
+#else
+ 		//! Split into rendering tasks
+ 		int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
+ 		assert(nTasks == tasks.size());
+ 
+ 		for (int taskI = 0; taskI < renderTasks.size(); taskI++) {
+ 			renderTasks[taskI]->GetNewUID();
+ 			renderTasks[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
+ 			renderTasks[taskI]->endIdx = std::min(renderTasks[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
+ 			renderTasks[taskI]->rays = &rays;
+			renderTasks[taskI]->frameCtx = frameCtx;
+ 			renderTasks[taskI]->renderer = this;
+ 		}
+ 
+ 		//! Add tasks to render pool
+ 		Util::Log::Debug("Adding " + std::to_string(renderTasks.size()) + " tasks");
+ 		renderPool.AddTasks(renderTasks);
+ 
+ 		renderPool.WaitIdle();
+#endif
+	}
+
+	//! AddFrame
+	//! Adds a new rendering frame of given size at the specified position
+	//! 
+	void Renderer::AddFrame(std::string name, int x, int y, int sizeX, int sizeY, std::shared_ptr<Player::Camera>camera) {
+		this->frames.push_back(std::make_shared<FrameContext>(std::make_shared<Frame>(name, x, y, sizeX, sizeY), camera));
+	}
+
+	//! RenderFrames
+	//! Populates and renders all frames to the window frame
+	//! 
+	void Renderer::RenderFrames() {
+		//! Populate the frames
+		for (int frameI = 0; frameI < frames.size(); frameI++) {
+			std::shared_ptr<FrameContext> frameCtx = frames[frameI];
+			this->ProduceFrame(frameCtx);
+		}
+
+		//! Draw the frames to the window
+		for (int frameI = 0; frameI < frames.size(); frameI++) {
+			std::shared_ptr<FrameContext> frameCtx = frames[frameI];
+			int maxOffsetX = std::min(frameCtx->frame->GetWidth(), window.GetWidth());
+			int maxOffsetY = std::min(frameCtx->frame->GetHeight(), window.GetHeight());
+
+			for (int offsetY = 0; offsetY < maxOffsetY; offsetY++) {
+				for (int offsetX = 0; offsetX < maxOffsetX; offsetX++) {
+					window.SetPixel(frameCtx->frame->GetPosX() + offsetX, frameCtx->frame->GetPosY() + offsetY, frameCtx->frame->GetPixel(offsetX, offsetY)); // TODO: For now, just overwrite previous frames, until transparency allows it (also need to skip if covered pixel?)
 				}
 			}
 		}
@@ -96,10 +165,10 @@ namespace Renderer {
 		return _CalcTotalLightHelper(ray, 0);
 	}
 
-	//! GetRawFrame
+	//! GetRawWindowFrame
 	//! Returns the raw window frame for external modification
 	//! 
-	Frame* Renderer::GetRawFrame() {
+	Frame* Renderer::GetRawWindowFrame() {
 		return &window;
 	}
 
@@ -238,7 +307,7 @@ namespace Renderer {
 	//! GenerateRays
 	//! Generates a list of rays from the given camera properties and frame size
 	//! 
-	std::vector<RayMgr::Ray> Renderer::GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight) {
+	std::vector<RayMgr::Ray> Renderer::GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight) {
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
 		 * ---------------------------------------------------------------- */

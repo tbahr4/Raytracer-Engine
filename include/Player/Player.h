@@ -16,15 +16,15 @@ namespace Player {
 		const double movementSpeed = 0.1;
 
 		//! Component references
-		std::unique_ptr<Camera> camera;
+		std::shared_ptr<Camera> camera;
 
 	public:
 		//! Constructors
-		Player(std::unique_ptr<Camera> camera);
+		Player(std::shared_ptr<Camera> camera);
 
 		//! Accessors
-		const Camera* GetCamera() const;
-		Camera* GetCamera();
+		std::shared_ptr<const Camera> GetCamera() const;
+		std::shared_ptr<Camera> GetCamera();
 		double GetMovementSpeed() const;
 	};
 
