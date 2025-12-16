@@ -25,6 +25,9 @@ namespace Renderer {
 
 	class Renderer {
 	private:
+		using RenderTaskList = std::vector<std::shared_ptr<Util::RenderTask>>;
+
+	private:
 		Frame window;
 		std::vector<std::shared_ptr<FrameContext>> frames;
 		DisplayDriver display;
@@ -35,10 +38,8 @@ namespace Renderer {
 		//! Internal variables
 		bool isInitialized = false;
 
-#ifndef SINGLE_THREADED
-		std::vector<std::shared_ptr<Util::RenderTask>> renderTasks;
-		Util::ThreadPool<Util::RenderThread> renderPool;	// Rendering thread pool
-#endif
+		std::unique_ptr<RenderTaskList> renderTasks;
+		std::unique_ptr<Util::ThreadPool<Util::RenderThread>> renderPool;	// Rendering thread pool
 
 		//! Properties
 		const int maxRayDepth;

@@ -1,18 +1,18 @@
 //!
 //! RenderThread.cpp
-//! Defines an worker thread that processes rendering tasks
+//! Defines a worker thread that processes rendering tasks
 //! 
 #include "RenderThread.h"
 #include "Renderer.h"
-
+#include "Engine.h"
 
 
 
 namespace Util {
 
-	RenderThread::RenderThread(std::string name, int resDownScale, std::function<void(WorkerThread*, bool)> taskComplete_Callback)
+	RenderThread::RenderThread(std::string name, std::function<void(WorkerThread*, bool)> taskComplete_Callback)
 		: WorkerThread(name, taskComplete_Callback)
-		, resDownScale(resDownScale)
+		, resDownScale(Engine::Config::RESOLUTION_DOWN_SCALE)
 	{}
 
 	bool RenderThread::Init() {
@@ -41,7 +41,7 @@ namespace Util {
 			uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
 
 			int pxBase = (rayIdx * resDownScale) % frameWidth;
-			int pyBase = (rayIdx * resDownScale) / (frameWidth / resDownScale);
+			int pyBase = resDownScale * std::floor(rayIdx / (frameWidth / resDownScale));
 
 			for (int px = pxBase; px < pxBase + resDownScale && px < frameWidth; px++) { // Loop for downscaling
 				for (int py = pyBase; py < pyBase + resDownScale && py < frameHeight; py++) {

@@ -1,6 +1,6 @@
 //!
 //! WorkerThread.h
-//! Defines an worker thread that works multiple tasks
+//! Defines a worker thread that works multiple tasks
 //! throughout its execution
 //! 
 #pragma once

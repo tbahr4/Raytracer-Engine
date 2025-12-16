@@ -28,16 +28,14 @@ namespace Util {
 		bool isActive;
 		std::mutex taskQueueMutex, idlePoolMutex;
 		std::condition_variable idleCond;
-		const int resDownScale;
 
 	public:
 		//! Constructors
 		//! 
-		ThreadPool(std::string name, int nThreads, int resDownScale)
+		ThreadPool(std::string name, int nThreads)
 			: name(name)
 			, nThreads(nThreads)
 			, isActive(false)
-			, resDownScale(resDownScale)
 		{}
 
 		//! Interface functions
@@ -58,7 +56,7 @@ namespace Util {
 		//! Instantiate threads
 		for (int threadIdx = 0; threadIdx < nThreads; threadIdx++) {
 			threads.push_back(std::make_unique<WorkerThreadType>(
-				"RenderThread_" + std::to_string(threadIdx), resDownScale, [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
+				"Thread_" + std::to_string(threadIdx), [threadIdx, this](WorkerThread<TaskType>* thread, bool success) {
 					if (!success) {
 						Util::Log::Error(name + "_" + std::to_string(threadIdx) + ": Failed to accomplish task");
 					}
@@ -114,16 +112,26 @@ namespace Util {
 			int nAssignments = std::min(nTasks, idleThreadCount);
 
 			for (int taskI = 0; taskI < nAssignments; taskI++) {
+				auto task = tasks[taskI].get();
+				if (task->startIdx < 0 || task->endIdx < 0 || task->endIdx - task->startIdx < 0) {
+					continue; // Task is not populated
+				}
+
 				int threadIdx = idleThreadIdx.front();
 				idleThreadIdx.pop();
-				threads[threadIdx]->SetTask(tasks[taskI].get());
-				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(tasks[taskI]->GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
+				threads[threadIdx]->SetTask(task);
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(task->GetUID()) + ") to worker thread (" + threads[threadIdx]->GetName() + ")");
 			}
 
 			//! Add remaining tasks to the pending queue
 			for (int taskI = nAssignments; taskI < nTasks; taskI++) {
-				taskQueue.push(tasks[taskI].get());
-				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(tasks[taskI]->GetUID()) + ") to work queue");
+				auto task = tasks[taskI].get();
+				if (task->startIdx < 0 || task->endIdx < 0 || task->endIdx - task->startIdx < 0) {
+					continue; // Task is not populated
+				}
+
+				taskQueue.push(task);
+				Util::Log::Debug(name + ": Added task (Task ID: " + std::to_string(task->GetUID()) + ") to work queue");
 			}
 		}
 	}

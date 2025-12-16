@@ -30,6 +30,7 @@ namespace Renderer {
 		int GetWidth() const;
 		int GetHeight() const;
 		const uint32_t* GetBuffer() const;
+		uint32_t* GetBuffer();
 
 		void SetPixel(int x, int y, uint32_t color);
 		void SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a);

@@ -20,18 +20,22 @@ namespace Renderer {
 	, maxRayDepth(maxRayDepth)
 	, resDownScale(resDownScale)
 	, skybox(std::make_unique<World::Skybox>())
-	, renderPool("RenderPool", Config::NUM_RENDER_THREADS, Config::RESOLUTION_DOWN_SCALE)
-	, renderTasks(std::ceil((Config::SCREEN_WIDTH* Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))
+	, renderPool(SINGLE_THREADED ? nullptr : std::make_unique< Util::ThreadPool < Util::RenderThread>>("RenderPool", Config::NUM_RENDER_THREADS))
+	, renderTasks(SINGLE_THREADED ? nullptr : std::make_unique<RenderTaskList>(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK)))
 	{
-		for (int i = 0; i < renderTasks.size(); i++) {
-			renderTasks[i] = std::make_shared<Util::RenderTask>();
+		if (!SINGLE_THREADED) {
+			for (int i = 0; i < renderTasks->size(); i++) {
+				(*renderTasks)[i] = std::make_shared<Util::RenderTask>();
+			}
 		}
 	}
 
 	//! Destructor
 	//! 
 	Renderer::~Renderer() {
-		renderPool.Shutdown();
+		if (!SINGLE_THREADED) {
+			renderPool->Shutdown();
+		}
 	}
 
 	//! Init
@@ -45,10 +49,10 @@ namespace Renderer {
 			return false;
 		}
 
-#ifndef SINGLE_THREADED
-		renderPool.Init();
-		Util::Log::Info("Render pool initialized");
-#endif
+		if (!SINGLE_THREADED) {
+			renderPool->Init();
+			Util::Log::Info("Render pool initialized");
+		}
 
 		Util::Log::Info("Renderer initialized successfully");
 		this->isInitialized = true;
@@ -77,43 +81,44 @@ namespace Renderer {
 		 * Calculate total light for each ray
 		 * ---------------------------------------------------------------- */
 
-#ifdef SINGLE_THREADED
-		for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
-			RayMgr::Ray& ray = rays[rayIdx];
-			Util::Vector3 color = CalcTotalLight(ray);
+		if (SINGLE_THREADED) {
+			for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
+				RayMgr::Ray& ray = rays[rayIdx];
+				Util::Vector3 color = CalcTotalLight(ray);
 
-			//! Set the frame's pixel
-			uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
+				//! Set the frame's pixel
+				uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
 
-			int pxBase = (rayIdx * resDownScale) % frameWidth;
-			int pyBase = (rayIdx * resDownScale) / (frameWidth / resDownScale);
+				int pxBase = (rayIdx * resDownScale) % frameWidth;
+				int pyBase = resDownScale * std::floor(rayIdx / (frameWidth / resDownScale));
 
-			for (int px = pxBase; px < pxBase + resDownScale && px < frameWidth; px++) { // Loop for downscaling
-				for (int py = pyBase; py < pyBase + resDownScale && py < frameHeight; py++) {
-					frameCtx->frame->SetPixel(px, py, colorAdj);
+				for (int px = pxBase; px < std::min(pxBase + resDownScale, frameWidth); px++) { // Loop for downscaling
+					for (int py = pyBase; py < std::min(pyBase + resDownScale, frameHeight); py++) {
+						frameCtx->frame->SetPixel(px, py, colorAdj);
+					}
 				}
 			}
 		}
-#else
- 		//! Split into rendering tasks
- 		int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
- 		assert(nTasks == tasks.size());
+		else {
+ 			//! Split into rendering tasks
+ 			int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
+ 			assert(nTasks == renderTasks->size());
  
- 		for (int taskI = 0; taskI < renderTasks.size(); taskI++) {
- 			renderTasks[taskI]->GetNewUID();
- 			renderTasks[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
- 			renderTasks[taskI]->endIdx = std::min(renderTasks[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
- 			renderTasks[taskI]->rays = &rays;
-			renderTasks[taskI]->frameCtx = frameCtx;
- 			renderTasks[taskI]->renderer = this;
- 		}
+ 			for (int taskI = 0; taskI < nTasks; taskI++) {
+ 				(*renderTasks)[taskI]->GetNewUID();
+ 				(*renderTasks)[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
+ 				(*renderTasks)[taskI]->endIdx = std::min((*renderTasks)[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
+ 				(*renderTasks)[taskI]->rays = &rays;
+				(*renderTasks)[taskI]->frameCtx = frameCtx;
+ 				(*renderTasks)[taskI]->renderer = this;
+ 			}
  
- 		//! Add tasks to render pool
- 		Util::Log::Debug("Adding " + std::to_string(renderTasks.size()) + " tasks");
- 		renderPool.AddTasks(renderTasks);
+ 			//! Add tasks to render pool
+ 			Util::Log::Debug("Adding " + std::to_string(renderTasks->size()) + " tasks");
+ 			renderPool->AddTasks(*renderTasks);
  
- 		renderPool.WaitIdle();
-#endif
+ 			renderPool->WaitIdle();
+		}
 	}
 
 	//! AddFrame
@@ -136,13 +141,25 @@ namespace Renderer {
 		//! Draw the frames to the window
 		for (int frameI = 0; frameI < frames.size(); frameI++) {
 			std::shared_ptr<FrameContext> frameCtx = frames[frameI];
-			int maxOffsetX = std::min(frameCtx->frame->GetWidth(), window.GetWidth());
-			int maxOffsetY = std::min(frameCtx->frame->GetHeight(), window.GetHeight());
+			std::shared_ptr<Frame> frameSrc = frameCtx->frame;
 
-			for (int offsetY = 0; offsetY < maxOffsetY; offsetY++) {
-				for (int offsetX = 0; offsetX < maxOffsetX; offsetX++) {
-					window.SetPixel(frameCtx->frame->GetPosX() + offsetX, frameCtx->frame->GetPosY() + offsetY, frameCtx->frame->GetPixel(offsetX, offsetY)); // TODO: For now, just overwrite previous frames, until transparency allows it (also need to skip if covered pixel?)
-				}
+			int minX = std::max(0, frameSrc->GetPosX());
+			int minY = std::max(0, frameSrc->GetPosY());
+			int maxX = std::min(window.GetWidth(), frameSrc->GetPosX() + frameSrc->GetWidth());
+			int maxY = std::min(window.GetHeight(), frameSrc->GetPosY() + frameSrc->GetHeight());
+
+			uint32_t* windowPixels = window.GetBuffer();
+			uint32_t* framePixels = frameSrc->GetBuffer();
+
+			for (int y = 0; y < maxY; y++) {
+				int dy = y - minY; // Delta from initial y
+				int copyWidth = maxX - minX;
+				int effFrameWidth = std::min(frameSrc->GetWidth(), maxX);
+
+				int offsetWindow = (y * window.GetWidth()) + minX;
+				int offsetFrame = (dy * frameSrc->GetWidth()) + minX;
+
+				memcpy(windowPixels + offsetWindow, framePixels + offsetFrame, sizeof(uint32_t) * copyWidth);
 			}
 		}
 	}

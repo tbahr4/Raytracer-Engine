@@ -16,7 +16,7 @@ namespace Renderer {
 		this->posY = posY;
 		this->width = width;
 		this->height = height;
-		this->pixels = new uint32_t[(double)width * (double)height]();
+		this->pixels = new uint32_t[width * height]();
 	}
 
 	//! Destructor
@@ -66,6 +66,13 @@ namespace Renderer {
 		return this->pixels;
 	}
 
+	//! GetBuffer
+	//! Returns the raw frame buffer data
+	//! 
+	uint32_t* Frame::GetBuffer() {
+		return this->pixels;
+	}
+
 	//! SetPixel
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint32_t color) {
@@ -80,7 +87,7 @@ namespace Renderer {
 	//! SetPixel
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-		this->SetPixel(x, y, (r << 6 | g << 4 | b << 2 | a));
+		this->SetPixel(x, y, (r << 6 * 4 | g << 4 * 4 | b << 2 * 4 | a));
 	}
 
 	uint32_t Frame::GetPixel(int x, int y) {

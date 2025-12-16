@@ -1,6 +1,6 @@
 //!
 //! RenderThread.h
-//! Defines an worker thread that processes rendering tasks
+//! Defines a worker thread that processes rendering tasks
 //! 
 #pragma once
 
@@ -19,7 +19,7 @@ namespace Util {
 		int resDownScale;
 
 	public:
-		RenderThread(std::string name, int resDownScale, std::function<void(WorkerThread*, bool)> taskComplete_Callback);
+		RenderThread(std::string name, std::function<void(WorkerThread*, bool)> taskComplete_Callback);
 
 	protected:
 		bool Init() override;
