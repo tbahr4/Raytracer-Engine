@@ -104,14 +104,6 @@
 
 
 
-
-
-
-
-
-
-
-
 <h2>Potential Improvements</h2>
 <ul>
   <li>GPU Acceleration</li>
