@@ -78,11 +78,39 @@ namespace Util {
 		friend Vector3<T> operator*(T scalar, const Vector3<T>& vec) {
 			return vec * scalar;
 		}
+		Vector3<T> operator*(const Vector3<T>& other) const {
+			return Vector3<T>(x * other.x, y * other.y, z * other.z);
+		}
+		Vector3<T>& operator*=(T scalar) {
+			x *= scalar;
+			y *= scalar;
+			z *= scalar;
+			return *this;
+		}
+		Vector3<T> operator/(T scalar) const {
+			return Vector3<T>(x / scalar, y / scalar, z / scalar);
+		}
 		Vector3<T> operator+(const Vector3<T>& other) const {
 			return Vector3<T>(x + other.x, y + other.y, z + other.z);
 		}
+		Vector3<T>& operator+=(const Vector3<T>& other) {
+			x += other.x;
+			y += other.y;
+			z += other.z;
+			return *this;
+		}
 		Vector3<T> operator-(const Vector3<T>& other) const {
 			return Vector3<T>(x - other.x, y - other.y, z - other.z);
+		}
+		Vector3<T>& operator-=(const Vector3<T>& other) {
+			x -= other.x;
+			y -= other.y;
+			z -= other.z;
+			return *this;
+		}
+		friend std::ostream& operator<<(std::ostream& os, const Vector3<T>& vec) {
+			os << vec.x << ", " << vec.y << ", " << vec.z;
+			return os;
 		}
 	};
 

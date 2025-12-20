@@ -4,6 +4,8 @@
 //! 
 #pragma once
 
+#include <atomic>
+
 
 
 namespace Util {
@@ -15,9 +17,10 @@ namespace Util {
 	public:
 		WorkTask();
 		int GetUID() const;
+		void GetNewUID();
 
 	private:
-		static int nextUID;
+		static std::atomic<int> nextUID;
 	};
 
 }; // namespace Util

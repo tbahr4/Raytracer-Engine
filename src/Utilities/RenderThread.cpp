@@ -1,9 +1,10 @@
 //!
 //! RenderThread.cpp
-//! Defines an worker thread that processes rendering tasks
+//! Defines a worker thread that processes rendering tasks
 //! 
 #include "RenderThread.h"
-
+#include "Renderer.h"
+#include "Engine.h"
 
 
 
@@ -11,6 +12,7 @@ namespace Util {
 
 	RenderThread::RenderThread(std::string name, std::function<void(WorkerThread*, bool)> taskComplete_Callback)
 		: WorkerThread(name, taskComplete_Callback)
+		, resDownScale(Engine::Config::RESOLUTION_DOWN_SCALE)
 	{}
 
 	bool RenderThread::Init() {
@@ -21,21 +23,31 @@ namespace Util {
 		/* ----------------------------------------------------------------
 		 * Calculate total light for each ray
 		 * ---------------------------------------------------------------- */
-		const Util::RenderTask* taskRef = task.get();
+		const Util::RenderTask* taskRef = task;
 		int startIdx = taskRef->startIdx;
 		int endIdx = taskRef->endIdx;
 		const std::vector<Renderer::RayMgr::Ray>* rays = taskRef->rays;
 		Renderer::Renderer* renderer = taskRef->renderer;
 
-		// TODO: This logic should be done in the renderer 
+		std::shared_ptr<Renderer::Frame> frame = taskRef->frameCtx->frame;
+		int frameWidth = frame->GetWidth();
+		int frameHeight = frame->GetHeight();
+
 		for (int rayIdx = startIdx; rayIdx < endIdx; rayIdx++) {
 			const Renderer::RayMgr::Ray& ray = (*rays)[rayIdx];
 			Util::Vector3 color = renderer->CalcTotalLight(ray);
 			
 			//! Store final color
-			Renderer::Frame* frame = renderer->GetRawFrame();
 			uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
-			frame->SetPixel(rayIdx % frame->GetWidth(), rayIdx / frame->GetWidth(), colorAdj);
+
+			int pxBase = (rayIdx * resDownScale) % frameWidth;
+			int pyBase = resDownScale * std::floor(rayIdx / (frameWidth / resDownScale));
+
+			for (int px = pxBase; px < pxBase + resDownScale && px < frameWidth; px++) { // Loop for downscaling
+				for (int py = pyBase; py < pyBase + resDownScale && py < frameHeight; py++) {
+					frame->SetPixel(px, py, colorAdj);
+				}
+			}
 		}
 
 		return true;

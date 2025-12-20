@@ -16,7 +16,7 @@ namespace Renderer {
 		//! 
 		std::unique_ptr<CollisionInfo> GetFirstCollision(World::World& world, const Ray& ray) {
 			// Maintain the shortest distance collision
-			std::unique_ptr<CollisionInfo> collision = nullptr;
+			std::unique_ptr<CollisionInfo> minCollision = nullptr;
 			double minDist = INFINITY;
 
 			//! Perform collision logic for all objects by default
@@ -28,72 +28,44 @@ namespace Renderer {
 					continue;
 				}
 
-				//! Handle collision depending on object type
-				switch (object->GetShapeType()) {
-				case World::ShapeType::CUBE:
-				case World::ShapeType::RECTANGLE:
-				default:
-					Util::Log::Error("GetFirstCollision: Unimplemented object shape defined for collision check");
-					return nullptr;
+				std::unique_ptr<CollisionInfo> collision = GetCollisionFromObject(object, ray);
+				if (collision == nullptr) {
+					continue;
+				}
 
-				case World::ShapeType::SPHERE:
-					
-					Util::Vector3<double> sphereCenter = object->GetPosition();
-					double sphereRadius = 1;	// FIXME: Need children types of shape object
-					// TODO: Add rotation, scale of objects (sphere rotation does not matter)
-
-					Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
-
-					// sqrLength(rayOrigin + rayDir * distance) = r^2
-					// 
-					double a = ray.direction.Dot(ray.direction);	// Should be 1
-					double b = 2 * offsetRayOrigin.Dot(ray.direction);
-					double c = offsetRayOrigin.Dot(offsetRayOrigin) - sphereRadius * sphereRadius;
-
-					double discriminant = (b * b) - (4 * a * c);
-
-					//! Check for collision
-					//! discriminant < 0 -> miss
-					if (discriminant >= 0) {
-						double roots[] = { 
-							(-b - std::sqrt(discriminant)) / (2 * a), 
-							(-b + std::sqrt(discriminant)) / (2 * a)
-						};
-
-						//! Get index of smallest positive root
-						int minPosRootIdx = (roots[0] > 0) ? 0 : (roots[1] > 0 ? 1 : -1);
-						if (minPosRootIdx == -1) {
-							continue;	// No collision
-						}
-
-						double distance = roots[minPosRootIdx];
-
-						if (distance >= 1e-9 && distance < minDist) {	// Ignore collisions behind ray origin
-							minDist = distance;
-							if (collision == nullptr) {
-								collision = std::make_unique<CollisionInfo>();
-							}
-
-							collision->object = object;
-
-							//! Populate entry collision
-							collision->distance = distance;
-							collision->position = ray.origin + ray.direction * distance;
-							collision->normal = (collision->position - sphereCenter).Normalized();
-
-							//! Populate exit collision (identical to entry if minPosRootIdx is 1)
-							collision->exitDistance = roots[1];
-							collision->exitPosition = ray.origin + ray.direction * collision->exitDistance;
-							collision->exitNormal = (collision->exitPosition - sphereCenter).Normalized();
-						}
-					}
-
-					break;
+				if (collision->distance < minDist) {
+					minDist = collision->distance;
+					minCollision = std::move(collision);
 				}
 			}
 
-			//! No collision found
-			return collision;
+			return minCollision;
+		}
+
+		//! GetFirstCollision
+		//! Returns all object collisions, sorted by increasing distance
+		//! 
+		std::vector<std::unique_ptr<CollisionInfo>> GetAllCollisions(World::World& world, const Ray& ray) {
+			std::vector<std::unique_ptr<CollisionInfo>> collisions;
+
+			//! Perform collision logic for all objects
+			int nObjects = world.GetObjectCount();
+			for (int objI = 0; objI < nObjects; objI++) {
+				World::Object* object = world.GetObject(objI);
+
+				if (object == nullptr) {
+					continue;
+				}
+
+				std::unique_ptr<CollisionInfo> collision = GetCollisionFromObject(object, ray);
+				if (collision == nullptr) {
+					continue;
+				}
+
+				collisions.push_back(std::move(collision));
+			}
+
+			return collisions;
 		}
 
 		std::unique_ptr<CollisionInfo> GetInternalCollision(World::Object& object, const Ray& ray) {
@@ -113,7 +85,8 @@ namespace Renderer {
 			case World::ShapeType::SPHERE:
 
 				Util::Vector3<double> sphereCenter = object.GetPosition();
-				double sphereRadius = 1;	// FIXME: Need children types of shape object
+				double sphereRadius = object.GetScale().x;	// FIXME: Need children types of shape object
+				assert(object.GetScale().x == object.GetScale().y && object.GetScale().x == object.GetScale().z);
 				// TODO: Add rotation, scale of objects (sphere rotation does not matter)
 
 				Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
@@ -161,7 +134,6 @@ namespace Renderer {
 						collision->exitNormal = (collision->exitPosition - sphereCenter).Normalized();
 					}
 				}
-
 			}
 
 			return collision;
@@ -177,13 +149,19 @@ namespace Renderer {
 			}
 
 			// FIXME: Make this work in a loop of all lights
-			const Util::Vector3<double> lightPos = { 0,5,3 };
-			RayMgr::Ray diffuseRay;
-			diffuseRay.origin = colInfo->position;
-			diffuseRay.direction = (lightPos - diffuseRay.origin).Normalized();
+			const Util::Vector3<double> lightPos1 = { 0,5,-3 }; // TODO: light object
+			const Util::Vector3<double> lightPos2 = { 5,-5,-3 };
+
+			RayMgr::Ray diffuseRay1;
+			diffuseRay1.origin = colInfo->position;
+			diffuseRay1.direction = (lightPos1 - diffuseRay1.origin).Normalized();
+
+			RayMgr::Ray diffuseRay2;
+			diffuseRay2.origin = colInfo->position;
+			diffuseRay2.direction = (lightPos2 - diffuseRay2.origin).Normalized();
 
 			//! Construct rays
-			std::vector<RayMgr::Ray> rays{ diffuseRay };
+			std::vector<RayMgr::Ray> rays{ diffuseRay1, diffuseRay2 };
 			return rays;
 		}
 
@@ -210,22 +188,14 @@ namespace Renderer {
 			/* ----------------------------------------------------------------
 			* Apply refraction via Snell's law
 			* ---------------------------------------------------------------- */
-			const double n1 = 1;		// TODO: Add to material mgr?
-			const double n2 = 1.1;		// TODO: Add to material
+			const double n1 = 1;	// Refractive index in air
+			double n2 = colInfo->object->GetMaterial().refractiveIdx;
 
 			//! Determine refracted entry vector
 			//! 
 			double eta = n1 / n2;	// Refractive index ratio
 			double cosI = ray.direction.Reversed().Dot(colInfo->normal);
 			double sinT2 = eta * eta * (1.0 - cosI * cosI);	// Sin^2(theta_t)
-
-			//! Assumption: Entry always occurs from air -> TIR can never occur
-			// TODO: Remove me
-			//if (sinT2 > 1) {
-			//	// Total internal reflection - No refraction occurs
-			//	Util::Log::WarnING("GetRefractionRay: Unimplemented reflection");
-			//	return RayMgr::Ray(); // TODO: Handle internal reflection
-			//}
 
 			double cosT = std::sqrt(1 - sinT2);	// Cosine of transmitted angle
 
@@ -308,6 +278,91 @@ namespace Renderer {
 			refrRay.origin = colInfo->exitPosition;
 			refrRay.direction = exitDir;
 			return refrRay;
+		}
+
+		//! GetCollisionFromObject
+		//! Returns the collision information of the ray with the given object
+		//! 
+		std::unique_ptr<CollisionInfo> GetCollisionFromObject(World::Object* object, const Ray& ray) {
+			if (object == nullptr) {
+				return nullptr;
+			}
+
+			//! Handle collision depending on object type
+			std::unique_ptr<CollisionInfo> collision = nullptr;
+
+			World::ShapeType shape = object->GetShapeType();
+			
+			if (shape == World::ShapeType::CUBE) {
+				throw std::invalid_argument("GetCollisionFromObject: Unimplemented shape");
+			}
+			else if (shape == World::ShapeType::RECTANGLE) {
+				throw std::invalid_argument("GetCollisionFromObject: Unimplemented shape");
+			}
+			else if (shape == World::ShapeType::SPHERE) {
+
+				Util::Vector3<double> sphereCenter = object->GetPosition();
+				double sphereRadius = object->GetScale().x;	// FIXME: Need children types of shape object
+				assert(object->GetScale().x == object->GetScale().y && object->GetScale().x == object->GetScale().z);
+				// TODO: Add rotation, scale of objects (sphere rotation does not matter)
+
+				Util::Vector3<double> offsetRayOrigin = ray.origin - sphereCenter;	// Offset ray as if sphere was at (0,0,0)
+
+				// sqrLength(rayOrigin + rayDir * distance) = r^2
+				// 
+				double a = ray.direction.Dot(ray.direction);	// Should be 1
+				double b = 2 * offsetRayOrigin.Dot(ray.direction);
+				double c = offsetRayOrigin.Dot(offsetRayOrigin) - sphereRadius * sphereRadius;
+
+				double discriminant = (b * b) - (4 * a * c);
+
+				//! Check for collision
+				//! 
+
+				if (discriminant < 0) {
+					//! Missed the object
+					return nullptr;
+				}
+
+				double roots[] = {
+					(-b - std::sqrt(discriminant)) / (2 * a),
+					(-b + std::sqrt(discriminant)) / (2 * a)
+				};
+
+				//! Get index of smallest positive root
+				int minPosRootIdx = (roots[0] > 0) ? 0 : (roots[1] > 0 ? 1 : -1);
+				if (minPosRootIdx == -1) {
+					return nullptr;
+				}
+
+				double distance = roots[minPosRootIdx];
+				if (distance < 1e-9) {
+					return nullptr;
+				}
+
+				if (distance >= 1e-9) {	// Ignore collisions behind ray origin
+					collision = std::make_unique<CollisionInfo>();
+
+					collision->object = object;
+
+					//! Populate entry collision
+					collision->distance = distance;
+					collision->position = ray.origin + ray.direction * distance;
+					collision->normal = (collision->position - sphereCenter).Normalized();
+
+					//! Populate exit collision (identical to entry if minPosRootIdx is 1)
+					collision->exitDistance = roots[1];
+					collision->exitPosition = ray.origin + ray.direction * collision->exitDistance;
+					collision->exitNormal = (collision->exitPosition - sphereCenter).Normalized();
+
+					return collision;
+				}
+			}
+			else {
+				throw std::invalid_argument("GetCollisionFromObject: Invalid shape");
+			}
+
+			return nullptr;
 		}
 
 	}; // namespace RayMgr

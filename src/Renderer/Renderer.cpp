@@ -3,6 +3,8 @@
 //! Central component for rendering logic
 //! 
 #include "Renderer.h"
+#include "Engine.h"
+using namespace Engine;
 
 
 
@@ -10,12 +12,31 @@ namespace Renderer {
 
 	//! Constructor
 	//! 
-	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr)
-	: window("WindowFrame", windowWidth, windowHeight)
+	Renderer::Renderer(const char* windowTitle, int windowWidth, int windowHeight, std::shared_ptr<Player::Player> player, std::shared_ptr<World::World> world, std::shared_ptr<InputMgr::InputMgr> inputMgr, int maxRayDepth, int resDownScale)
+	: window("WindowFrame", 0, 0, windowWidth, windowHeight)
 	, display(windowTitle, windowWidth, windowHeight, player, world, inputMgr)
 	, world(world)
 	, inputMgr(inputMgr)
-	{}
+	, maxRayDepth(maxRayDepth)
+	, resDownScale(resDownScale)
+	, skybox(std::make_unique<World::Skybox>())
+	, renderPool(SINGLE_THREADED ? nullptr : std::make_unique< Util::ThreadPool < Util::RenderThread>>("RenderPool", Config::NUM_RENDER_THREADS))
+	, renderTasks(SINGLE_THREADED ? nullptr : std::make_unique<RenderTaskList>(static_cast<size_t>(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))))
+	{
+		if (!SINGLE_THREADED) {
+			for (int i = 0; i < renderTasks->size(); i++) {
+				(*renderTasks)[i] = std::make_shared<Util::RenderTask>();
+			}
+		}
+	}
+
+	//! Destructor
+	//! 
+	Renderer::~Renderer() {
+		if (!SINGLE_THREADED) {
+			renderPool->Shutdown();
+		}
+	}
 
 	//! Init
 	//! Initializes the renderer to an active state
@@ -26,6 +47,11 @@ namespace Renderer {
 		if (!success) {
 			Util::Log::Error("Renderer initialization failed");
 			return false;
+		}
+
+		if (!SINGLE_THREADED) {
+			renderPool->Init();
+			Util::Log::Info("Render pool initialized");
 		}
 
 		Util::Log::Info("Renderer initialized successfully");
@@ -40,28 +66,101 @@ namespace Renderer {
 		return this->isInitialized && display.IsActive();
 	}
 
-	//! ProduceWorldFrame
-	//! Produces a world frame and stores within internal buffers for later rendering
+	//! ProduceFrame
+	//! Populates frame data and stores within internal buffers for later rendering
 	//! 
-	void Renderer::ProduceWorldFrame(std::shared_ptr<Player::Player> player) {
+	void Renderer::ProduceFrame(std::shared_ptr<FrameContext> frameCtx) {
 		/* ----------------------------------------------------------------
 		 * Generate rays from given screen frame
 		 * ---------------------------------------------------------------- */
-		std::vector<RayMgr::Ray> rays = GenerateRays(player->GetCamera(), display.GetWidth(), display.GetHeight());
-
+		int frameWidth = frameCtx->frame->GetWidth();
+		int frameHeight = frameCtx->frame->GetHeight();
+		std::vector<RayMgr::Ray> rays = GenerateRays(frameCtx->camera, frameWidth, frameHeight);
 
 		/* ----------------------------------------------------------------
 		 * Calculate total light for each ray
 		 * ---------------------------------------------------------------- */
-		for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
-			RayMgr::Ray& ray = rays[rayIdx];
-			Util::Vector3 color = CalcTotalLight(ray);
 
-			// Set the window pixel
-			int colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
-			int px = rayIdx % display.GetWidth();
-			int py = rayIdx / display.GetWidth();
-			this->window.SetPixel(px, py, colorAdj);
+		if (SINGLE_THREADED) {
+			for (int rayIdx = 0; rayIdx < rays.size(); rayIdx++) {
+				RayMgr::Ray& ray = rays[rayIdx];
+				Util::Vector3 color = CalcTotalLight(ray);
+
+				//! Set the frame's pixel
+				uint32_t colorAdj = (int)color.x << 6 * 4 | (int)color.y << 4 * 4 | (int)color.z << 2 * 4 | 0xFF;
+
+				int pxBase = (rayIdx * resDownScale) % frameWidth;
+				int pyBase = resDownScale * std::floor(rayIdx / (frameWidth / resDownScale));
+
+				for (int px = pxBase; px < std::min(pxBase + resDownScale, frameWidth); px++) { // Loop for downscaling
+					for (int py = pyBase; py < std::min(pyBase + resDownScale, frameHeight); py++) {
+						frameCtx->frame->SetPixel(px, py, colorAdj);
+					}
+				}
+			}
+		}
+		else {
+ 			//! Split into rendering tasks
+ 			int nTasks = std::ceil(rays.size() / (double)Config::NUM_RAYS_PER_TASK);
+ 			assert(nTasks == renderTasks->size());
+ 
+ 			for (int taskI = 0; taskI < nTasks; taskI++) {
+ 				(*renderTasks)[taskI]->GetNewUID();
+ 				(*renderTasks)[taskI]->startIdx = taskI * Config::NUM_RAYS_PER_TASK;
+ 				(*renderTasks)[taskI]->endIdx = std::min((*renderTasks)[taskI]->startIdx + Config::NUM_RAYS_PER_TASK, (int)rays.size());
+ 				(*renderTasks)[taskI]->rays = &rays;
+				(*renderTasks)[taskI]->frameCtx = frameCtx;
+ 				(*renderTasks)[taskI]->renderer = this;
+ 			}
+ 
+ 			//! Add tasks to render pool
+ 			Util::Log::Debug("Adding " + std::to_string(renderTasks->size()) + " tasks");
+ 			renderPool->AddTasks(*renderTasks);
+ 
+ 			renderPool->WaitIdle();
+		}
+	}
+
+	//! AddFrame
+	//! Adds a new rendering frame of given size at the specified position
+	//! 
+	void Renderer::AddFrame(std::string name, int x, int y, int sizeX, int sizeY, std::shared_ptr<Player::Camera>camera) {
+		this->frames.push_back(std::make_shared<FrameContext>(std::make_shared<Frame>(name, x, y, sizeX, sizeY), camera));
+	}
+
+	//! RenderFrames
+	//! Populates and renders all frames to the window frame
+	//! 
+	void Renderer::RenderFrames() {
+		//! Populate the frames
+		for (int frameI = 0; frameI < frames.size(); frameI++) {
+			std::shared_ptr<FrameContext> frameCtx = frames[frameI];
+			this->ProduceFrame(frameCtx);
+		}
+
+		//! Draw the frames to the window
+		for (int frameI = 0; frameI < frames.size(); frameI++) {
+			std::shared_ptr<FrameContext> frameCtx = frames[frameI];
+			std::shared_ptr<Frame> frameSrc = frameCtx->frame;
+
+			int minX = std::max(0, frameSrc->GetPosX());
+			int minY = std::max(0, frameSrc->GetPosY());
+			int maxX = std::min(window.GetWidth(), frameSrc->GetPosX() + frameSrc->GetWidth());
+			int maxY = std::min(window.GetHeight(), frameSrc->GetPosY() + frameSrc->GetHeight());
+
+			uint32_t* windowPixels = window.GetBuffer();
+			uint32_t* framePixels = frameSrc->GetBuffer();
+
+			for (int y = 0; y < maxY; y++) {
+				int dy = y - minY; // Delta from initial y
+				int copyWidth = maxX - minX;
+				int effFrameWidth = std::min(frameSrc->GetWidth(), maxX);
+
+				int offsetWindow = (y * window.GetWidth()) + minX;
+				int offsetFrame = (dy * frameSrc->GetWidth()) + minX;
+
+				memcpy(windowPixels + offsetWindow, framePixels + offsetFrame, sizeof(uint32_t) * copyWidth);
+			}
 		}
 	}
 
@@ -83,103 +182,149 @@ namespace Renderer {
 		return _CalcTotalLightHelper(ray, 0);
 	}
 
-	//! GetRawFrame
+	//! GetRawWindowFrame
 	//! Returns the raw window frame for external modification
 	//! 
-	Frame* Renderer::GetRawFrame() {
+	Frame* Renderer::GetRawWindowFrame() {
 		return &window;
 	}
 
 	//! _CalcTotalLightHelper
 	//! Helper function for CalcTotalLight
+	//! Note: This function is for primary rays only (e.g., collisions return the color) instead of shadow rays (collisions return black).
+	//!       Shadow rays (from diffuse calculations) do not recurse
 	//! 
 	Util::Vector3<double> Renderer::_CalcTotalLightHelper(const RayMgr::Ray& ray, int depth) const {
 		//! Base case
 		if (depth > maxRayDepth) {
-			return { 0,0,0 };	// No light contribution
+			return GetSkyboxColor(ray);
 		}
 
-		//! Get first collision
+		//! Fire ray
 		std::unique_ptr<RayMgr::CollisionInfo> firstCol = RayMgr::GetFirstCollision(*world, ray);
 
 		if (firstCol == nullptr) {
-			// No further contribution
-			return { 0,0,0 };
+			return GetSkyboxColor(ray);
 		}
-		
-		//! Get object's light properties
+
+		//! Get percentage contribution of each ray component
 		double pctRefl = firstCol->object->GetMaterial().reflectivity;
 		double pctRefr = firstCol->object->GetMaterial().transparency;
 		double pctDiff = 1 - pctRefl - pctRefr;
+		assert(pctDiff + pctRefl + pctRefr == 1);
 
-		if (pctDiff < 0) {
-			Util::Log::Error("Renderer: Invalid object properties. Sum of reflectivity and transparency must be at most 1.0");
-			return { 0,0,0 };
-		}
-
-		//! Get coincident rays
-		std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());  
-		RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
-		RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
-		
-		// TODO: return early if max depth
-		// TODO: only spawn ray if light property allows it
-
-		/* ----------------------------------------------------------------
-		 * Get component light
-		 * ---------------------------------------------------------------- */
-		//! Diffuse
-		// TODO: functionize this
-		std::vector<Util::Vector3<double>> diffuseComps(rayDiffs.size());
-		for (int lightI = 0; lightI < diffuseComps.size(); lightI++) {
-			//! Calculate diffuse due to given light
-			const RayMgr::Ray& diffuseRay = rayDiffs[lightI];
-
-			//! Color material if light is reached
-			std::unique_ptr<RayMgr::CollisionInfo> diffuseCol = RayMgr::GetFirstCollision(*world, diffuseRay);
-			if (diffuseCol == nullptr) {	// TODO: Bad check, need to check if light is collided with (in case something is behind the light). Make light an object to make collision info check simply "isLight?"
-				// Not obscured by an object before reaching light
-				// FIXME: Diffuse collisions with transparent objects allows light to pass through
-
-				//! Calculate intensity
-				double intensity = std::max(0.0, firstCol->normal.Dot(diffuseRay.direction));
-
-				// TODO: Calculate light falloff
-				// TODO: add light color
-
-				//! Calculate color
-				diffuseComps[lightI] = firstCol->object->GetMaterial().color * intensity;
-			}
-			else {
-				diffuseComps[lightI] = { 0,0,0 };
-			}
-		}
-		
-		firstCol.reset();
-
-		// Sum diffuse light contributions
-		// TODO: add HDR rendering for exceeding 255 intensity
+		//! Calculate diffuse component
 		Util::Vector3<double> colDiff = { 0,0,0 };
-		for (int lightI = 0; lightI < diffuseComps.size(); lightI++) {
-			colDiff = colDiff + diffuseComps[lightI];
+		if (pctDiff > 0) {
+			std::vector<RayMgr::Ray> rayDiffs = GetDiffuseRays(firstCol.get());
+
+			Util::Vector3<double> totLight = { 0,0,0 };
+			for (int rayI = 0; rayI < rayDiffs.size(); rayI++) {
+				//! Get collision
+				auto diffCollisions = RayMgr::GetAllCollisions(*world, rayDiffs[rayI]);
+
+				//! Determine loss due to object collision opacity
+				double opacityLossMult = 1;
+				for (int colI = 0; colI < diffCollisions.size(); colI++) {
+					auto col = diffCollisions[colI].get();
+					opacityLossMult *= col->object->GetMaterial().transparency;
+
+					if (opacityLossMult == 0) {
+						break;
+					}
+				}
+
+				//! Determine light of component
+				double intensity = std::max(0.0, firstCol->normal.Dot(rayDiffs[rayI].direction)) * opacityLossMult; // TODO: HDR
+				const Util::Vector3<double> lightColor = (rayI == 0 ? Config::LIGHT_COLOR : Util::Vector3<double>{0,0,150}) / 255; // TODO: Create light object as renderable
+				totLight += lightColor * intensity;
+			}
+
+			//! Determine final color
+			totLight.x = std::min(1.0, totLight.x);
+			totLight.y = std::min(1.0, totLight.y);
+			totLight.z = std::min(1.0, totLight.z);
+			colDiff = firstCol->object->GetMaterial().color * totLight;
 		}
-		
-		//! Reflection and refraction
-		Util::Vector3<double> colRefl = _CalcTotalLightHelper(rayRefl, depth + 1);
-		Util::Vector3<double> colRefr = _CalcTotalLightHelper(rayRefr, depth + 1);
-		
-		/* ----------------------------------------------------------------
-		 * Get total light
-		 * ---------------------------------------------------------------- */
-		Util::Vector3<double> totalLight = (colDiff * pctDiff) + (colRefl * pctRefl) + (colRefr * pctRefr);
-		
-		return totalLight;
+
+		//! Calculate reflection component
+		Util::Vector3<double> colRefl = { 0,0,0 };
+		if (pctRefl > 0) {
+			RayMgr::Ray rayRefl = GetReflectionRay(ray, firstCol.get());
+			colRefl = _CalcTotalLightHelper(rayRefl, depth + 1);
+		}
+
+		//! Calculate refraction component
+		Util::Vector3<double> colRefr = { 0,0,0 };
+		if (pctRefr > 0) {
+			RayMgr::Ray rayRefr = GetRefractionRay(ray, firstCol.get());
+			colRefr = _CalcTotalLightHelper(rayRefr, depth + 1);
+		}
+
+		//! Determine total resultant light
+		return (colDiff * pctDiff) + (colRefl * pctRefl) + (colRefr * pctRefr);
+	}
+
+	//! GetSkyboxColor
+	//! Returns the skybox color that results from the given ray
+	//! 
+	Util::Vector3<double> Renderer::GetSkyboxColor(const RayMgr::Ray& ray) const {
+		//double normT = (ray.direction.y + 1) / 2;
+		//return (1 - normT) * Config::FLOOR_COLOR + normT * Config::CEILING_COLOR;
+
+
+		//! Get the side
+		World::Skybox::Side side;
+
+		double rayX = ray.direction.x;
+		double rayY = ray.direction.y;
+		double rayZ = ray.direction.z;
+
+		double  absX = std::abs(rayX);
+		double  absY = std::abs(rayY);
+		double  absZ = std::abs(rayZ);
+
+		if (absX >= absY && absX >= absZ) { // X is dominant
+			if (rayX > 0) side = World::Skybox::Side::LEFT;
+			else       side = World::Skybox::Side::RIGHT;
+		}
+		else if (absY >= absX && absY >= absZ) { // Y is dominant
+			if (rayY > 0) side = World::Skybox::Side::UP;
+			else       side = World::Skybox::Side::DOWN;
+		}
+		else { // Z is dominant
+			if (rayZ > 0) side = World::Skybox::Side::FRONT;
+			else       side = World::Skybox::Side::BACK;
+		}
+
+		//! Get UV coordinate
+		double u, v;
+
+		switch (side) {
+		case World::Skybox::Side::RIGHT:  u = -rayZ / absX; v = -rayY / absX; break;
+		case World::Skybox::Side::LEFT:   u = rayZ / absX; v = -rayY / absX; break;
+		case World::Skybox::Side::UP:    u = rayX / absY; v = rayZ / absY; break;
+		case World::Skybox::Side::DOWN: u = rayX / absY; v = -rayZ / absY; break;
+		case World::Skybox::Side::FRONT:  u = rayX / absZ; v = -rayY / absZ; break;
+		case World::Skybox::Side::BACK:   u = -rayX / absZ; v = -rayY / absZ; break;
+		default: u = 0; v = 0; break;
+		}
+
+		u = 0.5 + (-u * .5);
+		v = 0.5 + (v * .5);
+
+		if (side == World::Skybox::Side::LEFT || side == World::Skybox::Side::RIGHT) {
+			u = 1-u;
+		}
+
+		//! Determine pixel
+		return skybox->GetPixel(u, v, side);
 	}
 
 	//! GenerateRays
 	//! Generates a list of rays from the given camera properties and frame size
 	//! 
-	std::vector<RayMgr::Ray> Renderer::GenerateRays(const Player::Camera* camera, int frameWidth, int frameHeight) {
+	std::vector<RayMgr::Ray> Renderer::GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight) const {
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
 		 * ---------------------------------------------------------------- */
@@ -191,18 +336,21 @@ namespace Renderer {
 		/* ----------------------------------------------------------------
 		 * Generate rays
 		 * ---------------------------------------------------------------- */
-		std::vector<RayMgr::Ray> rays(frameWidth * frameHeight);
+		double raysX = std::ceil(frameWidth / resDownScale);
+		double raysY = std::ceil(frameHeight / resDownScale);
+
+		std::vector<RayMgr::Ray> rays(raysX * raysY);
 
 		double halfWidth = tan((camera->GetFOV() * Util::PI / 180) / 2);
-		double aspectRatio = frameWidth / frameHeight;
+		double aspectRatio = static_cast<double>(frameWidth) / static_cast<double>(frameHeight);
 		double halfHeight = halfWidth / aspectRatio;
 
 		int rayIdx = 0;
-		for (int py = 0; py < frameHeight; py++) {
-			for (int px = 0; px < frameWidth; px++) {
+		for (int py = 0; py < raysY; py++) {
+			for (int px = 0; px < raysX; px++) {
 				//! Normalize pixels to UV [-1,1]
-				double u = ((px + 0.5) / frameWidth) * 2 - 1;
-				double v = ((py + 0.5) / frameHeight) * 2 - 1;
+				double u = (((px * resDownScale) + 0.5) / frameWidth) * 2 - 1;
+				double v = (((py * resDownScale) + 0.5) / frameHeight) * 2 - 1;
 
 				//! Scale UV by half the screen size
 				double x = u * halfWidth;
@@ -210,7 +358,7 @@ namespace Renderer {
 
 				//! Construct the ray
 				rays[rayIdx].origin = camera->GetPosition();
-				rays[rayIdx].direction = (x * camRight + y * camUp + camForward).Normalized();
+				rays[rayIdx].direction = (x * camRight - y * camUp + camForward).Normalized();
 				rayIdx++;
 			}
 		}

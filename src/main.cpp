@@ -6,15 +6,12 @@
 #include "Engine.h"
 
 
-constexpr int nRenderThreads = 16;	// TODO: Parameterize/default to all(-1)
-
-
 
 int main() {
 	/* ----------------------------------------------------------------
 	* Initialize engine
 	* ---------------------------------------------------------------- */
-	Engine::Engine engine = Engine::Engine(nRenderThreads);
+	Engine::Engine engine = Engine::Engine();
 	
 	bool success = engine.Init();
 	if (!success) {
@@ -25,19 +22,12 @@ int main() {
 	/* ----------------------------------------------------------------
 	* Main loop
 	* ---------------------------------------------------------------- */
-	using clock = std::chrono::high_resolution_clock;
-	auto lastTime = clock::now();
-
 	while (engine.IsActive()) {
+		auto start = std::chrono::high_resolution_clock::now();
 		engine.DisplayFrame();
-
-		auto currentTime = clock::now();
-		std::chrono::duration<float> elapsed = currentTime - lastTime;
-		lastTime = currentTime;
-
-		float deltaTime = elapsed.count();
-		float fps = 1.0f / deltaTime;
-		std::cout << "FPS: " << fps << std::endl;
+		auto end = std::chrono::high_resolution_clock::now();
+		std::chrono::duration<double> duration = end - start; int x = 0;
+		Util::Log::Warn(std::to_string(1 / duration.count()) + " FPS");
 	}
 
 	return 0;

@@ -19,44 +19,43 @@ namespace Player {
 	//! GetForwardVector
 	//! Returns the forward direction vector of the camera
 	//! 
+	//! -Z: forward
+	//! +X: right
+	//! +Y: up
+	//! 
 	Util::Vector3<double> Camera::GetForwardVector() const {
 		return Util::Vector3<double>(
 			std::cos(rotation.pitch) * std::sin(rotation.yaw),
 			std::sin(rotation.pitch),
-			std::cos(rotation.pitch) * std::cos(rotation.yaw)
+			-std::cos(rotation.pitch) * std::cos(rotation.yaw)
 		);
 	}
 
 	//! GetFRUVector
 	//! Returns the forward, right, and up direction vectors of the camera
 	//! 
+	//! -Z: forward
+	//! +X: right
+	//! +Y: up
+	//! 
 	const Camera::FRUVector Camera::GetFRUVector() const {
-		// Forward vector
-		const Util::Vector3<double>& camForward = GetForwardVector();
-		double roll = rotation.roll * Util::PI / 180;
-
-		// World reference vector for RD vectors
-		Util::Vector3<double> worldRefVec = Util::Vector3<double>::Up();
-		if (std::abs(camForward.Dot(worldRefVec))) {
-			worldRefVec = Util::Vector3<double>::Forward();
-		}
-
-		// Compute world axis orthogonal vectors
-		Util::Vector3<double> camRightOrth = camForward.Cross(worldRefVec).Reversed();
-		Util::Vector3<double> camUpOrth = camRightOrth.Cross(camForward);
-
-		// Roll camera RU vectors
-		Util::Vector3<double> camRight = camRightOrth * std::cos(roll) +
-			camUpOrth * std::sin(roll);
-
-		Util::Vector3<double> camUp = camUpOrth * std::cos(roll) -
-			camRightOrth * std::sin(roll);
-
-		// Setup output structure
 		Camera::FRUVector fruVector;
-		fruVector.forward = camForward;
-		fruVector.right = camRight;
-		fruVector.up = camUp;
+
+		double roll = rotation.roll;
+		double pitch = rotation.pitch;
+		double yaw = rotation.yaw;
+
+		fruVector.right = Util::Vector3<double>(cos(yaw)*cos(roll) + sin(yaw)*sin(pitch)*sin(roll), 
+												cos(pitch)*sin(roll), 
+												-sin(yaw)*cos(roll));
+
+		fruVector.up = Util::Vector3<double>(-cos(yaw)*sin(roll) + sin(yaw)*sin(pitch)*cos(roll),
+											 cos(pitch)*cos(roll), 
+											 sin(yaw)*sin(roll) + cos(yaw)*sin(pitch)*cos(roll));
+
+		fruVector.forward = Util::Vector3<double>(sin(yaw)*cos(pitch),
+												  -sin(pitch),
+												  cos(yaw)*cos(pitch)).Reversed();
 
 		return fruVector;
 	}

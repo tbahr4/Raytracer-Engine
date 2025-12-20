@@ -34,8 +34,13 @@ set(SDL3_DISABLE_TESTS ON CACHE BOOL "" FORCE)
 
 
 ## Gather all files
-file(GLOB_RECURSE SOURCE_FILES_ALL CONFIGURE_DEPENDS src/**/*.cpp)
+file(GLOB_RECURSE SOURCE_FILES_ALL CONFIGURE_DEPENDS 
+	src/*.cpp
+	src/**/*.cpp
+)
 file(GLOB_RECURSE HEADER_FILES_ALL CONFIGURE_DEPENDS 
+	include/*.h
+	include/*.hpp
 	include/**/*.h 
 	include/**/*.hpp
 )
@@ -53,7 +58,15 @@ set(SDLIMAGE_AVIF OFF CACHE BOOL "" FORCE) # Requires Perl and Nasm for libaom (
 CPMAddPackage("gh:libsdl-org/SDL_image#bcc97c0")
 list(APPEND LIBS SDL3_image::SDL3_image)
 
-
+# STB Image
+CPMAddPackage(
+    NAME stb
+    GITHUB_REPOSITORY nothings/stb
+    GIT_TAG master
+)
+add_library(stb_interface INTERFACE)
+target_include_directories(stb_interface INTERFACE ${stb_SOURCE_DIR})
+list(APPEND LIBS stb_interface)
 
 
 ## Setup executable
@@ -64,6 +77,12 @@ target_link_libraries(${PROJECT_NAME} PRIVATE ${LIBS})
 
 
 
+## Copy binaries
+file(
+	COPY "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+    DESTINATION "${CMAKE_CURRENT_BINARY_DIR}"
+)
+
 
 ## Setup VS logical formatting
 
@@ -72,6 +91,7 @@ source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("include" REGULAR_EXPRESSION "include/.*")
 
 # Folder structure - src
+source_group("src" REGULAR_EXPRESSION "src/.*")
 source_group("src\\Renderer" REGULAR_EXPRESSION "src/Renderer/.*")
 source_group("src\\World" REGULAR_EXPRESSION "src/World/.*")
 source_group("src\\Player" REGULAR_EXPRESSION "src/Player/.*")
@@ -80,6 +100,7 @@ source_group("src\\Input Mgr" REGULAR_EXPRESSION "src/Input Mgr/.*")
 source_group("src\\Utilities" REGULAR_EXPRESSION "src/Utilities/.*")
 
 # Folder structure - include
+source_group("include" REGULAR_EXPRESSION "include/.*")
 source_group("include\\Renderer" REGULAR_EXPRESSION "include/Renderer/.*")
 source_group("include\\World" REGULAR_EXPRESSION "include/World/.*")
 source_group("include\\Player" REGULAR_EXPRESSION "include/Player/.*")

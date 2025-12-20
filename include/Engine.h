@@ -5,42 +5,52 @@
 #pragma once
 
 #include <stdio.h>
+#include <cassert>
 #include "Renderer.h"
 #include "World.h"
 #include "Object.h"
-#include "ThreadPool.h"
-#include "RenderThread.h"
 
-
-
-// TODO: Add to configuration
-constexpr int screenWidth = 1280;
-constexpr int screenHeight = 960;
-constexpr double fov = 60;
-const Util::Vector3<double> startPos = Util::Vector3<double>(0, 0, 0);
-const Util::Rotation startRot = Util::Rotation(0, 0, 0);
-constexpr char* windowTitle = "Raytracer";
-
+#define SINGLE_THREADED 0
 
 
 namespace Engine {
 
+	namespace Config {
+		//! General
+		constexpr char* WINDOW_TITLE = "Raytracer";
+		const Util::Vector3<double> START_POS = { 0, 0, 0 };
+		const Util::Rotation START_ROT = { 0, 0, 0 };
+		constexpr double MOUSE_SENSITIVITY = .0025;
+		constexpr double ROTATION_SPEED = 0.1;
+
+		//! Rendering
+		constexpr double FOV = 90;
+		constexpr int SCREEN_WIDTH = 1920;
+		constexpr int SCREEN_HEIGHT = 1080;
+		constexpr int NUM_RENDER_THREADS = 16;
+		constexpr int MAX_RAY_DEPTH = 5; // Maximum number of ray bounces to render
+		constexpr int NUM_RAYS_PER_TASK = 1000; // Number of ray traces to be packaged per worker thread
+		constexpr int RESOLUTION_DOWN_SCALE = 2; // Scales down the ray count (e.g., NxN pixels per ray)
+
+		//! Lighting
+		const Util::Vector3<double> FLOOR_COLOR = { 45,45,45 };
+		const Util::Vector3<double> CEILING_COLOR = { 75, 75, 255 };
+		const Util::Vector3<double> LIGHT_COLOR = { 255,255,255 };
+	}
+
 	class Engine {
 	private:
 		bool isActive;				// Stores whether engine is initialized and active
-		int nRenderThreads;			// Number of threads
-		Util::ThreadPool<Util::RenderThread> renderPool;	// Rendering thread pool
 
 		//! Sub-components
 		std::shared_ptr<World::World> world;
-		std::unique_ptr<Player::Camera> camera;
+		std::shared_ptr<Player::Camera> camera;
 		std::shared_ptr<Player::Player> player;
 		std::shared_ptr<InputMgr::InputMgr> inputMgr;
 		std::unique_ptr<Renderer::Renderer> renderer;
 
 	public:
-		Engine(int nRenderThreads);
-		~Engine();
+		Engine();
 		
 		//! Interface functions
 		bool Init();

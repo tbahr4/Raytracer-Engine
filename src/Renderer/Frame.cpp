@@ -10,11 +10,13 @@ namespace Renderer {
 	//! Constructor
 	//! Creates a frame buffer of specified size
 	//! 
-	Frame::Frame(std::string name, int width, int height) {
+	Frame::Frame(std::string name, int posX, int posY, int width, int height) {
 		this->name = name;
+		this->posX = posX;
+		this->posY = posY;
 		this->width = width;
 		this->height = height;
-		this->pixels = new uint32_t[(double)width * (double)height]();
+		this->pixels = new uint32_t[width * height]();
 	}
 
 	//! Destructor
@@ -28,6 +30,20 @@ namespace Renderer {
 	//! 
 	std::string Frame::GetName() const {
 		return name;
+	}
+
+	//! GetPosX
+	//! Returns the X position of the frame
+	//! 
+	int Frame::GetPosX() const {
+		return this->posX;
+	}
+
+	//! GetPosY
+	//! Returns the Y position of the frame
+	//! 
+	int Frame::GetPosY() const {
+		return this->posY;
 	}
 
 	//! GetWidth
@@ -50,6 +66,13 @@ namespace Renderer {
 		return this->pixels;
 	}
 
+	//! GetBuffer
+	//! Returns the raw frame buffer data
+	//! 
+	uint32_t* Frame::GetBuffer() {
+		return this->pixels;
+	}
+
 	//! SetPixel
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint32_t color) {
@@ -64,7 +87,7 @@ namespace Renderer {
 	//! SetPixel
 	//! Sets a pixel at the given position to the provided color
 	void Frame::SetPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
-		this->SetPixel(x, y, (r << 6 | g << 4 | b << 2 | a));
+		this->SetPixel(x, y, (r << 6 * 4 | g << 4 * 4 | b << 2 * 4 | a));
 	}
 
 	uint32_t Frame::GetPixel(int x, int y) {
@@ -75,5 +98,13 @@ namespace Renderer {
 
 		return pixels[x + (width * y)];
 	}
+
+	//! FrameContext
+	//! Constructor
+	//! 
+	FrameContext::FrameContext(std::shared_ptr<Frame> frame, std::shared_ptr<Player::Camera> camera) 
+		: frame(frame)
+		, camera(camera)
+	{}
 
 }; // namespace Renderer

@@ -73,8 +73,18 @@ namespace Util {
 		Vector2<T> operator+(const Vector2<T>& other) const {
 			return Vector2<T>(x + other.x, y + other.y);
 		}
+		Vector2<T>& operator+=(const Vector2<T>& other) {
+			x += other.x;
+			y += other.y;
+			return *this;
+		}
 		Vector2<T> operator-(const Vector2<T>& other) const {
 			return Vector2<T>(x - other.x, y - other.y);
+		}
+		Vector2<T>& operator-=(const Vector2<T>& other) {
+			x -= other.x;
+			y -= other.y;
+			return *this;
 		}
 	};
 
