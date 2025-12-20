@@ -21,7 +21,7 @@ namespace Renderer {
 	, resDownScale(resDownScale)
 	, skybox(std::make_unique<World::Skybox>())
 	, renderPool(SINGLE_THREADED ? nullptr : std::make_unique< Util::ThreadPool < Util::RenderThread>>("RenderPool", Config::NUM_RENDER_THREADS))
-	, renderTasks(SINGLE_THREADED ? nullptr : std::make_unique<RenderTaskList>(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK)))
+	, renderTasks(SINGLE_THREADED ? nullptr : std::make_unique<RenderTaskList>(static_cast<size_t>(std::ceil((Config::SCREEN_WIDTH * Config::SCREEN_HEIGHT / (Config::RESOLUTION_DOWN_SCALE * Config::RESOLUTION_DOWN_SCALE)) / (double)Config::NUM_RAYS_PER_TASK))))
 	{
 		if (!SINGLE_THREADED) {
 			for (int i = 0; i < renderTasks->size(); i++) {
@@ -324,7 +324,7 @@ namespace Renderer {
 	//! GenerateRays
 	//! Generates a list of rays from the given camera properties and frame size
 	//! 
-	std::vector<RayMgr::Ray> Renderer::GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight) {
+	std::vector<RayMgr::Ray> Renderer::GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight) const {
 		/* ----------------------------------------------------------------
 		 * Get camera FRU vector information
 		 * ---------------------------------------------------------------- */

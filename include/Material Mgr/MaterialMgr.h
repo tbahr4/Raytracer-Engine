@@ -40,7 +40,7 @@ namespace MaterialMgr {
 		{MATERIAL_ID::TEST_MAT_2, Material(Util::Vector3<double>(255,50,200), 0.3, 0, 1.3)},
 		{MATERIAL_ID::TEST_MAT_3, Material(Util::Vector3<double>(50,255,50), .79, 0, 1)},
 		{MATERIAL_ID::TEST_MAT_4, Material(Util::Vector3<double>(255,255,255), 0, 0, 1)},
-		{MATERIAL_ID::TEST_MAT_5, Material(Util::Vector3<double>(255,0,0), 0.3, 0, 1)}
+		{MATERIAL_ID::TEST_MAT_5, Material(Util::Vector3<double>(255,0,0), 0.05, 0, 1)}
 	};
 
 	const Material& GetMaterial(MATERIAL_ID matID);

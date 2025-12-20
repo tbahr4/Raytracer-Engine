@@ -10,7 +10,7 @@
 #include "World.h"
 #include "Object.h"
 
-#define SINGLE_THREADED 1
+#define SINGLE_THREADED 0
 
 
 namespace Engine {
@@ -18,21 +18,19 @@ namespace Engine {
 	namespace Config {
 		//! General
 		constexpr char* WINDOW_TITLE = "Raytracer";
-		constexpr int NUM_RENDER_THREADS = 16;
-		constexpr int NUM_POPULATE_WINDOW_THREADS = 16;
-		constexpr int SCREEN_WIDTH = 1920*2;
-		constexpr int SCREEN_HEIGHT = 1080*2;
-		constexpr double FOV = 90;
 		const Util::Vector3<double> START_POS = { 0, 0, 0 };
 		const Util::Rotation START_ROT = { 0, 0, 0 };
 		constexpr double MOUSE_SENSITIVITY = .0025;
 		constexpr double ROTATION_SPEED = 0.1;
-		constexpr int MAX_RAY_DEPTH = 5; // Maximum number of ray bounces to render
-		constexpr int NUM_RAYS_PER_TASK = 1000; // Number of ray traces to be packaged per worker thread
-		constexpr int RESOLUTION_DOWN_SCALE = 5; // Scales down the ray count (e.g., NxN pixels per ray)
 
 		//! Rendering
-		// TODO: sort
+		constexpr double FOV = 90;
+		constexpr int SCREEN_WIDTH = 1920*2;
+		constexpr int SCREEN_HEIGHT = 1080*2;
+		constexpr int NUM_RENDER_THREADS = 16;
+		constexpr int MAX_RAY_DEPTH = 5; // Maximum number of ray bounces to render
+		constexpr int NUM_RAYS_PER_TASK = 1000; // Number of ray traces to be packaged per worker thread
+		constexpr int RESOLUTION_DOWN_SCALE = 1; // Scales down the ray count (e.g., NxN pixels per ray)
 
 		//! Lighting
 		const Util::Vector3<double> FLOOR_COLOR = { 45,45,45 };

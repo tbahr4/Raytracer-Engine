@@ -60,7 +60,7 @@ namespace Renderer {
 		void AddFrame(std::string name, int x, int y, int sizeX, int sizeY, std::shared_ptr<Player::Camera> camera);
 		void RenderFrames();
 		void DisplayFrame();
-		std::vector<RayMgr::Ray> GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight);
+		std::vector<RayMgr::Ray> GenerateRays(std::shared_ptr<Player::Camera> camera, int frameWidth, int frameHeight) const;
 		Util::Vector3<double> CalcTotalLight(const RayMgr::Ray& ray) const;
 		Frame* GetRawWindowFrame();
 
